@@ -10,6 +10,9 @@
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)\PhysicsEngine\include</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)Output\$(Configuration)\PhysicsEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

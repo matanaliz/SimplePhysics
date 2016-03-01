@@ -1,4 +1,4 @@
-#include "phys_engine.h"
+#include <phys_engine.h>
 
 #include <algorithm>
 #include <chrono>
@@ -21,12 +21,12 @@ private:
 
 	void checkWorldRestricitons(BodyPtr&);
 
-	using BodyVector = std::vector<BodyPtr>;
 	int m_botBorder;
 	int m_leftBorder;
 	int m_upBorder;
 	int m_rightBorder;
 
+	using BodyVector = std::vector<BodyPtr>;
 	BodyVector m_bodies;
 
 	fVec2D m_gravity;
@@ -34,8 +34,10 @@ private:
 
 void EngineImpl::SetWorldConstrains(float gravity, int left, int bot, int right, int top)
 {
+	// Set gravity vector
 	m_gravity = fVec2D(0, -gravity);
 
+	// Set world margins
 	m_botBorder = bot;
 	m_upBorder = top;
 	m_rightBorder = right;
@@ -56,6 +58,8 @@ void EngineImpl::Step(float dt)
 {
 	for (auto& body : m_bodies)
 	{
+		/* TODO Check body mass
+				More intensive calculations can be done here like air density, etc */
 		fVec2D velocity = body->GetVelocityVector();
 		fVec2D position = body->GetPosition();
 
@@ -65,12 +69,15 @@ void EngineImpl::Step(float dt)
 		body->SetPosition(position);
 		body->SetVelocityVector(velocity);
 
+		/* TODO This can be optimized with some sparce grid and check only wold margin quadrants.
+				also this can be paralleled, collision detection in quadrants etc. */
 		checkWorldRestricitons(body);
 	}
 }
 
 void EngineImpl::checkWorldRestricitons(BodyPtr& body)
 {
+	// Check restrictions. Body bounce at world margins
 	fVec2D pos = body->GetPosition();
 	fVec2D vel = body->GetVelocityVector();
 	if (pos.x >= m_rightBorder || pos.x < m_leftBorder)
