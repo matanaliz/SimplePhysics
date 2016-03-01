@@ -10,6 +10,16 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\phys_body.h" />
+    <ClInclude Include="include\phys_engine.h" />
+    <ClInclude Include="include\phys_platform.h" />
+    <ClInclude Include="include\phys_utils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\phys_body.cpp" />
+    <ClCompile Include="source\phys_engine.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{942E9DDA-282A-473F-802D-8306C8B01856}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
