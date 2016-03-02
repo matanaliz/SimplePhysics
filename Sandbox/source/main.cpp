@@ -3,6 +3,68 @@
 #include <chrono>
 #include <phys_engine.h>
 
+// Simple wrapper class for physical body
+class Entity
+{
+public:
+	explicit Entity(BodyPtr, HWND);
+	~Entity() = default;
+
+	Entity(const Entity&) = delete;
+	Entity& operator=(const Entity&) = delete;
+	Entity(Entity&&) = delete;
+	Entity& operator=(Entity&&) = delete;
+
+	void Draw();
+
+private:
+	HWND m_hWnd;
+	BodyPtr m_body;
+	fVec2D m_prevPosition;
+};
+
+Entity::Entity(BodyPtr body, HWND hWnd)
+	: m_hWnd(hWnd)
+	, m_body(body)
+	, m_prevPosition(m_body->GetPosition())
+{
+
+}
+
+void Entity::Draw()
+{
+	// TODO move to header
+	int WhiteColor = RGB(255, 255, 255);
+	int BlackColor = RGB(0, 0, 0);
+
+	HDC hdc;
+	hdc = GetDC(m_hWnd);
+
+	// 1. Clean rect for previous position
+	SelectObject(hdc, GetStockObject(DC_PEN));
+	SetDCPenColor(hdc, WhiteColor);
+
+	Rectangle(hdc, 
+		(int)m_prevPosition.x,
+		(int)m_prevPosition.y,
+		(int)m_prevPosition.x + 20,
+		(int)m_prevPosition.y + 20);
+
+	SetDCPenColor(hdc, BlackColor);
+
+	// 2. Draw new object
+	fVec2D pos = m_body->GetPosition();
+	Ellipse(hdc,
+		(int)pos.x,
+		(int)pos.y,
+		(int)pos.x + 20,
+		(int)pos.y + 20);
+
+	// 3. Save state to previous position
+	m_prevPosition = pos;
+	ReleaseDC(m_hWnd, hdc);
+}
+
 LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	PAINTSTRUCT ps;
@@ -60,6 +122,7 @@ int main(int argc, char* argv[])
 
 			// Get engine object
 			IEngine* engine = IEngine::Instance();
+
 			// Set physical simulation constrains e.g. gravity and world size.
 			engine->SetWorldConstrains(kGravity, 0, 0, 840, 480);
 
@@ -75,6 +138,8 @@ int main(int argc, char* argv[])
 			// Add body into engine for simulation
 			engine->AddBody(body);
 
+			Entity e((body), hWnd);
+
 			while (TRUE)
 			{
 				if (GetMessage(&msg, NULL, 0, 0))
@@ -86,19 +151,8 @@ int main(int argc, char* argv[])
 				static const float dt = 1.0 / 30.0;
 				std::this_thread::sleep_for(std::chrono::milliseconds((int)(dt * 1000)));
 
-				// Get current position of object
-				fVec2D pos = body->GetPosition();
-
-				// TODO wrap up body object into propper entity class for correct drawing
-				// TODO get rid of the "tail"
-				HDC hdc;
-				hdc = GetDC(hWnd);
-				Ellipse(hdc,
-					(int)pos.x,
-					(int)pos.y,
-					(int)pos.x + 20,
-					(int)pos.y + 20);
-				ReleaseDC(hWnd, hdc);
+				// Entity object holds body object
+				e.Draw();
 
 				// Call engine step with time delta parameter to calculate physics
 				engine->Step(dt);

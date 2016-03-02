@@ -13,8 +13,12 @@ public:
 	T y;
 
 	explicit Vec2D(T vx = 0, T vy = 0) : x(vx), y(vy) {}
+
 	Vec2D(const Vec2D& v) : x(v.x), y(v.y) {}
 	Vec2D& operator=(const Vec2D& v) { x = v.x; y = v.y; return *this; }
+
+	Vec2D(Vec2D&& v) : x(std::move(v.x)), y(std::move(v.y)) {}
+	Vec2D& operator=(Vec2D&& v) { x = std::move(v.x); y = std::move(v.y); return *this; }
 
 	// Unary arithmetic operators
 	Vec2D& operator+=(const Vec2D& v) { x += v.x; y += v.y; return *this; }

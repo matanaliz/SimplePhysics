@@ -12,10 +12,13 @@ public:
 	virtual void RemoveBody(BodyPtr) override;
 	virtual void Step(float dt) override;
 
-	EngineImpl() {};
-	virtual ~EngineImpl() {};
+	EngineImpl();
+	virtual ~EngineImpl() = default;
+
 	EngineImpl(const EngineImpl&) = delete;
 	EngineImpl& operator=(const EngineImpl&) = delete;
+	EngineImpl(EngineImpl&&) = delete;
+	EngineImpl& operator=(EngineImpl&&) = delete;
 
 private:
 
@@ -75,16 +78,32 @@ void EngineImpl::Step(float dt)
 	}
 }
 
+EngineImpl::EngineImpl()
+	: m_botBorder(0)
+	, m_leftBorder(0)
+	// TODO move constants to constants header
+	, m_upBorder(1024)
+	, m_rightBorder(1024)
+	, m_bodies()
+	, m_gravity(0, -9.81)
+{
+
+}
+
 void EngineImpl::checkWorldRestricitons(BodyPtr& body)
 {
-	// Check restrictions. Body bounce at world margins
+	// TODO this should be moved to constants header
+	static float kBounceConstant = 1.5;
+	
 	fVec2D pos = body->GetPosition();
 	fVec2D vel = body->GetVelocityVector();
+
+	// Check restrictions. Body will bounce at world margins.
 	if (pos.x >= m_rightBorder || pos.x < m_leftBorder)
-		body->SetVelocityVector(fVec2D(-vel.x, vel.y));
+		body->SetVelocityVector(fVec2D(-vel.x / kBounceConstant, vel.y));
 
 	if (pos.y >= m_upBorder || pos.y < m_botBorder)
-		body->SetVelocityVector(fVec2D(vel.x, -vel.y));
+		body->SetVelocityVector(fVec2D(vel.x, -vel.y / kBounceConstant));
 }
 
 IEngine* IEngine::Instance()

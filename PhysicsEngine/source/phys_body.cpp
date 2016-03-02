@@ -1,15 +1,14 @@
 #include <phys_body.h>
 
-// TODO move BodyImpl ot private include header
+// TODO move BodyImpl to private include header
 class BodyImpl : public IBody
 {
 public:
-	BodyImpl() = default;
+	BodyImpl();
 	~BodyImpl() = default;
 	BodyImpl(const BodyImpl&) = default;
 	BodyImpl& operator=(const BodyImpl&) = default;
 
-	// TODO implement move ctors
 	BodyImpl(BodyImpl&&);
 	BodyImpl& operator=(BodyImpl&&);
 
@@ -23,11 +22,35 @@ public:
 	virtual void SetVelocityVector(const fVec2D&) override;
 
 private:
-
+	// TODO get usage of mass and calculate impulses
 	float m_mass;
 	fVec2D m_position;
 	fVec2D m_velocityVector;
 };
+
+BodyImpl::BodyImpl()
+	: m_mass(1)
+	, m_position(0, 0)
+	, m_velocityVector(0, 0)
+{
+
+}
+
+BodyImpl::BodyImpl(BodyImpl&& rhs)
+	: m_mass(std::move(rhs.m_mass))
+	, m_position(std::move(rhs.m_position))
+	, m_velocityVector(std::move(rhs.m_velocityVector))
+{
+
+}
+
+BodyImpl& BodyImpl::operator=(BodyImpl&& rhs)
+{
+	m_mass = std::move(rhs.m_mass);
+	m_position = std::move(rhs.m_position);
+	m_velocityVector = std::move(rhs.m_position);
+	return *this;
+}
 
 fVec2D BodyImpl::GetPosition() const
 {
