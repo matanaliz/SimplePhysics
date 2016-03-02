@@ -11,12 +11,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\graphics.cpp" />
     <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\PhysicsEngine\PhysicsEngine.vcxproj">
       <Project>{942e9dda-282a-473f-802d-8306c8b01856}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\graphics.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{28AD222B-43FF-4FDD-8AF3-4A6C3ECA057D}</ProjectGuid>
