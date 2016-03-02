@@ -63,9 +63,9 @@ void EngineImpl::Step(float dt)
 		fVec2D velocity = body->GetVelocityVector();
 		fVec2D position = body->GetPosition();
 
-		velocity += m_gravity * dt;
-		position += velocity * dt;
-
+		position += dt * (velocity + dt * (m_gravity / 2));
+		velocity += dt * m_gravity;
+		
 		body->SetPosition(position);
 		body->SetVelocityVector(velocity);
 
