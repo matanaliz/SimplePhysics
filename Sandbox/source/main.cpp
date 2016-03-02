@@ -3,30 +3,32 @@
 #include <chrono>
 #include <phys_engine.h>
 
-// Simple wrapper class for physical body
+// Simple wrapper class for physical body, basic circle shape
 class Entity
 {
 public:
-	explicit Entity(BodyPtr, HWND);
+	explicit Entity(BodyPtr, HWND, unsigned radius = 25);
 	~Entity() = default;
 
 	Entity(const Entity&) = delete;
 	Entity& operator=(const Entity&) = delete;
 	Entity(Entity&&) = delete;
 	Entity& operator=(Entity&&) = delete;
-
+	 
 	void Draw();
 
 private:
 	HWND m_hWnd;
 	BodyPtr m_body;
 	fVec2D m_prevPosition;
+	unsigned m_radius;
 };
 
-Entity::Entity(BodyPtr body, HWND hWnd)
+Entity::Entity(BodyPtr body, HWND hWnd, unsigned radius)
 	: m_hWnd(hWnd)
 	, m_body(body)
 	, m_prevPosition(m_body->GetPosition())
+	, m_radius(radius)
 {
 
 }
@@ -40,25 +42,35 @@ void Entity::Draw()
 	HDC hdc;
 	hdc = GetDC(m_hWnd);
 
+	SetGraphicsMode(hdc, GM_ADVANCED);
+	SetMapMode(hdc, MM_ISOTROPIC);
+
+	static const unsigned int margin = 20;
+	RECT windowArea;
+	GetClientRect(m_hWnd, &windowArea);
+	SetViewportOrgEx(hdc, margin, windowArea.bottom - margin, NULL);
+
 	// 1. Clean rect for previous position
 	SelectObject(hdc, GetStockObject(DC_PEN));
 	SetDCPenColor(hdc, WhiteColor);
 
+	// 10 pixels around shape will be cleaned
+	static unsigned cleanupMargin = m_radius + 10;
 	Rectangle(hdc, 
-		(int)m_prevPosition.x,
-		(int)m_prevPosition.y,
-		(int)m_prevPosition.x + 20,
-		(int)m_prevPosition.y + 20);
+		(int)m_prevPosition.x - cleanupMargin,
+		(int)m_prevPosition.y - cleanupMargin,
+		(int)m_prevPosition.x + cleanupMargin,
+		(int)m_prevPosition.y + cleanupMargin);
 
 	SetDCPenColor(hdc, BlackColor);
 
 	// 2. Draw new object
 	fVec2D pos = m_body->GetPosition();
 	Ellipse(hdc,
-		(int)pos.x,
-		(int)pos.y,
-		(int)pos.x + 20,
-		(int)pos.y + 20);
+		(int)pos.x - m_radius,
+		(int)pos.y - m_radius,
+		(int)pos.x + m_radius,
+		(int)pos.y + m_radius);
 
 	// 3. Save state to previous position
 	m_prevPosition = pos;
@@ -124,7 +136,7 @@ int main(int argc, char* argv[])
 			IEngine* engine = IEngine::Instance();
 
 			// Set physical simulation constrains e.g. gravity and world size.
-			engine->SetWorldConstrains(kGravity, 0, 0, 840, 480);
+			engine->SetWorldConstrains(kGravity, 0, 0, 2048, 2048);
 
 			// Physical body. Should be wrapped for correct drawing.
 			BodyPtr body = IBody::GetBody();
@@ -133,7 +145,7 @@ int main(int argc, char* argv[])
 			body->SetPosition(fVec2D(0, 0));
 
 			// Setting velocity vector as vX = 10 m/s, vY = 60 m/s
-			body->SetVelocityVector(fVec2D(10, 60));
+			body->SetVelocityVector(fVec2D(10, 100));
 
 			// Add body into engine for simulation
 			engine->AddBody(body);
@@ -148,8 +160,8 @@ int main(int argc, char* argv[])
 				}
 
 				// Stepping should be implemented with native timer
-				static const float dt = 1.0 / 30.0;
-				std::this_thread::sleep_for(std::chrono::milliseconds((int)(dt * 1000)));
+				static const float dt = 1.0 / 60.0;
+				std::this_thread::sleep_for(std::chrono::milliseconds((int)(dt * 250)));
 
 				// Entity object holds body object
 				e.Draw();

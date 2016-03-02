@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <tuple>
+#include <stdexcept>
 
 // TODO move implementation to cpp
 template <class T>
@@ -26,7 +27,13 @@ public:
 
 	// Unary scalar multiplication and division operators
 	template <typename S> Vec2D& operator*=(S s) { x *= s; y *= s; return *this; }
-	template <typename S> Vec2D& operator/=(S s) { x /= s; y /= s; return *this; }
+	template <typename S> Vec2D& operator/=(S s) 
+	{ 
+		if (0 == s) 
+			throw std::invalid_argument("Vec2D was divided by zero.");
+
+		x /= s; y /= s; return *this; 
+	}
 };
 
 	// Compare operators

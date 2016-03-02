@@ -93,17 +93,17 @@ EngineImpl::EngineImpl()
 void EngineImpl::checkWorldRestricitons(BodyPtr& body)
 {
 	// TODO this should be moved to constants header
-	static float kBounceConstant = 1.5;
+	static float kBounceConstant = 0.95;
 	
 	fVec2D pos = body->GetPosition();
 	fVec2D vel = body->GetVelocityVector();
 
 	// Check restrictions. Body will bounce at world margins.
 	if (pos.x >= m_rightBorder || pos.x < m_leftBorder)
-		body->SetVelocityVector(fVec2D(-vel.x / kBounceConstant, vel.y));
+		body->SetVelocityVector(fVec2D(-vel.x * kBounceConstant, vel.y));
 
 	if (pos.y >= m_upBorder || pos.y < m_botBorder)
-		body->SetVelocityVector(fVec2D(vel.x, -vel.y / kBounceConstant));
+		body->SetVelocityVector(fVec2D(vel.x, -vel.y * kBounceConstant));
 }
 
 IEngine* IEngine::Instance()
