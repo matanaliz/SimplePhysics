@@ -1,16 +1,24 @@
 #include <phys_engine.h>
+#include <phys_constants.h>
 
 #include <algorithm>
 #include <chrono>
 #include <vector>
 
+using namespace physic;
+
 class EngineImpl : public IEngine
 {
 public:
-	virtual void SetWorldConstrains(float gravity, int left, int bot, int right, int top) override;
+	virtual void SetWorldConstrains(
+		float gravity = kGravity, 
+		int left = 0, 
+		int bot = 0, 
+		int right = kWorldMarginRight, 
+		int top = kWorldMarginTop) override;
 	virtual void AddBody(BodyPtr) override;
 	virtual void RemoveBody(BodyPtr) override;
-	virtual void Step(float dt) override;
+	virtual void Step(double dt) override;
 
 	EngineImpl();
 	virtual ~EngineImpl() = default;
@@ -57,7 +65,7 @@ void EngineImpl::RemoveBody(BodyPtr body)
 	m_bodies.erase(std::remove(m_bodies.begin(), m_bodies.end(), body), m_bodies.end());
 }
 
-void EngineImpl::Step(float dt)
+void EngineImpl::Step(double dt)
 {
 	for (auto& body : m_bodies)
 	{
@@ -81,9 +89,8 @@ void EngineImpl::Step(float dt)
 EngineImpl::EngineImpl()
 	: m_botBorder(0)
 	, m_leftBorder(0)
-	// TODO move constants to constants header
-	, m_upBorder(1024)
-	, m_rightBorder(1024)
+	, m_upBorder(kWorldMarginTop)
+	, m_rightBorder(kWorldMarginRight)
 	, m_bodies()
 	, m_gravity(0, -9.81)
 {
@@ -93,7 +100,7 @@ EngineImpl::EngineImpl()
 void EngineImpl::checkWorldRestricitons(BodyPtr& body)
 {
 	// TODO this should be moved to constants header
-	static float kBounceConstant = 0.95;
+	float kBounceConstant = body->GetBounceFactor();
 	
 	fVec2D pos = body->GetPosition();
 	fVec2D vel = body->GetVelocityVector();

@@ -2,12 +2,13 @@
 #include <thread>
 #include <chrono>
 #include <phys_engine.h>
+#include <phys_constants.h>
 
 // Simple wrapper class for physical body, basic circle shape
 class Entity
 {
 public:
-	explicit Entity(BodyPtr, HWND, unsigned radius = 25);
+	explicit Entity(physic::BodyPtr, HWND, unsigned radius = 25);
 	~Entity() = default;
 
 	Entity(const Entity&) = delete;
@@ -19,12 +20,12 @@ public:
 
 private:
 	HWND m_hWnd;
-	BodyPtr m_body;
-	fVec2D m_prevPosition;
+	physic::BodyPtr m_body;
+	physic::fVec2D m_prevPosition;
 	unsigned m_radius;
 };
 
-Entity::Entity(BodyPtr body, HWND hWnd, unsigned radius)
+Entity::Entity(physic::BodyPtr body, HWND hWnd, unsigned radius)
 	: m_hWnd(hWnd)
 	, m_body(body)
 	, m_prevPosition(m_body->GetPosition())
@@ -65,7 +66,7 @@ void Entity::Draw()
 	SetDCPenColor(hdc, BlackColor);
 
 	// 2. Draw new object
-	fVec2D pos = m_body->GetPosition();
+	physic::fVec2D pos = m_body->GetPosition();
 	Ellipse(hdc,
 		(int)pos.x - m_radius,
 		(int)pos.y - m_radius,
@@ -129,23 +130,20 @@ int main(int argc, char* argv[])
 			ShowWindow(hWnd, SW_SHOWDEFAULT);
 			MSG msg;
 
-			// Simple gravity constant. Should be moved to some engine header.
-			const float kGravity = 9.81;
-
 			// Get engine object
-			IEngine* engine = IEngine::Instance();
+			physic::IEngine* engine = physic::IEngine::Instance();
 
 			// Set physical simulation constrains e.g. gravity and world size.
-			engine->SetWorldConstrains(kGravity, 0, 0, 2048, 2048);
+			engine->SetWorldConstrains(physic::kGravity, 0, 0, 2048, 2048);
 
 			// Physical body. Should be wrapped for correct drawing.
-			BodyPtr body = IBody::GetBody();
+			physic::BodyPtr body = physic::IBody::GetBody();
 
 			// Set initial position of body
-			body->SetPosition(fVec2D(0, 0));
+			body->SetPosition(physic::fVec2D(0, 0));
 
 			// Setting velocity vector as vX = 10 m/s, vY = 60 m/s
-			body->SetVelocityVector(fVec2D(10, 100));
+			body->SetVelocityVector(physic::fVec2D(10, 100));
 
 			// Add body into engine for simulation
 			engine->AddBody(body);
@@ -160,7 +158,7 @@ int main(int argc, char* argv[])
 				}
 
 				// Stepping should be implemented with native timer
-				static const float dt = 1.0 / 60.0;
+				static const float dt = 1.0f / 60.0;
 				std::this_thread::sleep_for(std::chrono::milliseconds((int)(dt * 250)));
 
 				// Entity object holds body object

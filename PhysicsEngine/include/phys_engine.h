@@ -4,18 +4,21 @@
 #include <phys_platform.h>
 #include <phys_body.h>
 
-class PHYS_API IEngine
+namespace physic
 {
-public:
-	virtual void SetWorldConstrains(float gravity, int bot, int top, int xmax, int ymax) = 0;
-	virtual void AddBody(BodyPtr) = 0;
-	virtual void RemoveBody(BodyPtr) = 0;
-	virtual void Step(float dt) = 0;
+	class PHYS_API IEngine
+	{
+	public:
+		virtual void SetWorldConstrains(float gravity, int bot, int top, int xmax, int ymax) = 0;
+		virtual void AddBody(BodyPtr) = 0;
+		virtual void RemoveBody(BodyPtr) = 0;
+		virtual void Step(double dt) = 0;
 
-	static IEngine* Instance();
-protected:
-	IEngine();
-	virtual ~IEngine();
-};
+		static IEngine* Instance();
+	protected:
+		IEngine();
+		virtual ~IEngine();
+	};
+} // namespace physic
 
 #endif // PHYS_ENGINE_H

@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\phys_body.h" />
+    <ClInclude Include="include\phys_constants.h" />
     <ClInclude Include="include\phys_engine.h" />
     <ClInclude Include="include\phys_platform.h" />
     <ClInclude Include="include\phys_utils.h" />
