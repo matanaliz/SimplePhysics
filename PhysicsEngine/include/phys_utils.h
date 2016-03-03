@@ -1,13 +1,38 @@
 #ifndef PHYS_UTILS_H
 #define PHYS_UTILS_H
 
+#include <phys_platform.h>
+#include <phys_constants.h>
+
 #include <cmath>
 #include <tuple>
 #include <stdexcept>
 
 namespace physic
 {
-	template <class T>
+
+	template <typename T>
+	T Clip(const T& n, const T& lower, const T& upper) {
+		return std::max(lower, std::min(n, upper));
+	}
+
+	template <typename T>
+	class PHYS_API Angle
+	{
+	public:
+		Angle(T angle) : m_angle(angle) {}
+		~Angle() = default;
+		T inRad() const { return static_cast<T>(m_angle * kPi / 180); }
+		T inDeg() const { return m_angle; }
+
+	private:
+		T m_angle;
+	};
+
+	// Useful aliases
+	using fAngle = Angle<float>;
+
+	template <typename T>
 	class PHYS_API Vec2D
 	{
 	public:
@@ -15,6 +40,14 @@ namespace physic
 		T y;
 
 		explicit Vec2D(T vx = 0, T vy = 0) : x(vx), y(vy) {}
+
+		template <typename A>
+		Vec2D(T length, Angle<A> angle) 
+			: x(static_cast<T>(length * std::cos(angle.inRad())))
+			, y(static_cast<T>(length * std::sin(angle.inRad())))
+		{}
+
+		~Vec2D() = default;
 
 		Vec2D(const Vec2D& v) : x(v.x), y(v.y) {}
 		Vec2D& operator=(const Vec2D& v) { x = v.x; y = v.y; return *this; }
@@ -35,6 +68,8 @@ namespace physic
 
 			x /= s; y /= s; return *this;
 		}
+
+		typedef T type;
 	};
 
 	// Compare operators
