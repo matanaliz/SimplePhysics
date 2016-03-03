@@ -46,9 +46,10 @@ void printCommandHelp()
 	std::cout << "--vel   : start velocity in m/s" << std::endl;
 }
 
+// Check command line for parameter and value
 char* getCommandParam(int argc, char* argv[], const std::string& param)
 {
-	char ** end = argv + argc;
+	char** end = argv + argc;
 	char** it = std::find(argv, end, param);
 	if (it != end && ++it != end)
 		return *it;
@@ -73,39 +74,33 @@ int main(int argc, char* argv[])
 	physic::fVec2D startVelocity(0, 0);
 
 	if (argc < 4)
-	{
 		return failedCommandParam();
+
+	// Parse angle parameter
+	char* param = getCommandParam(argc, argv, "--angle");
+	if (0 != param)
+	{
+		float value = std::stof(param);
+		if (value > 90.f || value < 0.f)
+		{
+			std::cout << "Angle in degrees, must be 0 < angle < 90" << std::endl;
+			return failedCommandParam();
+		}
+
+		startAngle = { value };
 	}
 	else
+		return failedCommandParam();
+
+	// Parse velocity parameter
+	param = getCommandParam(argc, argv, "--vel");
+	if (0 != param)
 	{
-		// Parse angle parameter
-		char* param = getCommandParam(argc, argv, "--angle");
-		if (0 != param)
-		{
-			float value = std::stof(param);
-			if (value > 90.f || value < 0.f)
-			{
-				std::cout << "Angle in degrees, must be 0 < angle < 90" << std::endl;
-				return failedCommandParam();
-			}
-
-			startAngle = { value };
-		}
-		else
-			return failedCommandParam();
-
-		// Parse velocity
-		param = getCommandParam(argc, argv, "--vel");
-		if (0 != param)
-		{
-			float value = std::stof(param);
-			startVelocity = { value, startAngle };
-		}
-		else
-			return failedCommandParam();
+		float value = std::stof(param);
+		startVelocity = { value, startAngle };
 	}
-
-
+	else
+		return failedCommandParam();
 
 	const wchar_t* wndClassName = L"wndcls";
 	WNDCLASSEX wndClass = {
@@ -132,7 +127,6 @@ int main(int argc, char* argv[])
 		if (hWnd)
 		{
 			ShowWindow(hWnd, SW_SHOWDEFAULT);
-
 
 			// Get engine object
 			physic::IEngine* engine = physic::IEngine::Instance();
