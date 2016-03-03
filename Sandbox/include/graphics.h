@@ -2,38 +2,62 @@
 #define GRAPHICS_H
 #include <Windows.h>
 #include <phys_engine.h>
+#include <vector>
 
-enum Colors
+namespace draw
 {
-	Black = RGB(0, 0, 0),
-	White = RGB(255, 255, 255)
-};
+	enum Colors
+	{
+		Black = RGB(0, 0, 0),
+		White = RGB(255, 255, 255)
+	};
 
-// Place start of coordinates at margin value from left-bot corner
-const unsigned kViewportMargin = 20;
-// How much more pixels radius will be cleaned around basic shape
-const unsigned kCleanupMargin = 10;
+	const POINT kAxisCrossPoint = { 50, 50 };
+	// How much more pixels radius will be cleaned around basic shape
+	const unsigned kCleanupMargin = 2;
 
-const unsigned kDefaultEntityRadius = 25;
+	const unsigned kDefaultEntityRadius = 50;
 
-class Entity
-{
-public:
-	explicit Entity(physic::BodyPtr, HWND, unsigned radius = kDefaultEntityRadius);
-	~Entity() = default;
+	class Entity
+	{
+	public:
+		explicit Entity(const physic::BodyPtr&, unsigned radius = kDefaultEntityRadius);
+		virtual ~Entity() = default;
 
-	Entity(const Entity&) = delete;
-	Entity& operator=(const Entity&) = delete;
-	Entity(Entity&&) = delete;
-	Entity& operator=(Entity&&) = delete;
+		Entity(const Entity&) = delete;
+		Entity& operator=(const Entity&) = delete;
+		Entity(Entity&&) = delete;
+		Entity& operator=(Entity&&) = delete;
 
-	void Draw();
+		virtual void Draw(HWND);
 
-private:
-	HWND m_hWnd;
-	physic::BodyPtr m_body;
-	physic::fVec2D m_prevPosition;
-	unsigned m_radius;
-};
+	private:
+		physic::BodyPtr m_body;
+		physic::fVec2D m_prevPosition;
+		unsigned m_radius;
+	};
+
+	class Render
+	{
+	public:
+
+		static Render* Instance();
+		void SetWindowsHandle(HWND);
+		void AddBody(const physic::BodyPtr&);
+
+		void Crear();
+		void Draw();
+		void DrawCoordinates();
+		
+	private:
+		Render();
+		~Render() {};
+
+		HWND m_hWnd;
+
+		using EntityPtr = std::shared_ptr<Entity>;
+		std::vector<EntityPtr> m_enteties;
+	};
+}
 
 #endif // GRAPHICS_H

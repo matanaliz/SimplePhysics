@@ -16,8 +16,8 @@ public:
 		int bot = 0, 
 		int right = kWorldMarginRight, 
 		int top = kWorldMarginTop) override;
-	virtual void AddBody(BodyPtr) override;
-	virtual void RemoveBody(BodyPtr) override;
+	virtual void AddBody(const BodyPtr&) override;
+	virtual void RemoveBody(const BodyPtr&) override;
 	virtual void Step(double dt) override;
 
 	EngineImpl();
@@ -37,8 +37,7 @@ private:
 	int m_upBorder;
 	int m_rightBorder;
 
-	using BodyVector = std::vector<BodyPtr>;
-	BodyVector m_bodies;
+	std::vector<BodyPtr> m_bodies;
 
 	fVec2D m_gravity;
 };
@@ -55,12 +54,12 @@ void EngineImpl::SetWorldConstrains(float gravity, int left, int bot, int right,
 	m_leftBorder = left;
 }
 
-void EngineImpl::AddBody(BodyPtr body)
+void EngineImpl::AddBody(const BodyPtr& body)
 {
 	m_bodies.push_back(body);
 }
 
-void EngineImpl::RemoveBody(BodyPtr body)
+void EngineImpl::RemoveBody(const BodyPtr& body)
 {
 	m_bodies.erase(std::remove(m_bodies.begin(), m_bodies.end(), body), m_bodies.end());
 }
@@ -92,7 +91,7 @@ EngineImpl::EngineImpl()
 	, m_upBorder(kWorldMarginTop)
 	, m_rightBorder(kWorldMarginRight)
 	, m_bodies()
-	, m_gravity(0, -9.81)
+	, m_gravity(0, -9.81f)
 {
 
 }

@@ -10,8 +10,8 @@ namespace physic
 	{
 	public:
 		virtual void SetWorldConstrains(float gravity, int bot, int top, int xmax, int ymax) = 0;
-		virtual void AddBody(BodyPtr) = 0;
-		virtual void RemoveBody(BodyPtr) = 0;
+		virtual void AddBody(const BodyPtr&) = 0;
+		virtual void RemoveBody(const BodyPtr&) = 0;
 		virtual void Step(double dt) = 0;
 
 		static IEngine* Instance();

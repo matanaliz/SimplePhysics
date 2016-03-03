@@ -27,7 +27,7 @@ namespace physic
 		Vec2D& operator-=(const Vec2D& v) { x -= v.x; y -= v.y; return *this; }
 
 		// Unary scalar multiplication and division operators
-		template <typename S> Vec2D& operator*=(S s) { x *= s; y *= s; return *this; }
+		template <typename S> Vec2D& operator*=(S s) { x *= static_cast<T>(s); y *= static_cast<T>(s); return *this; }
 		template <typename S> Vec2D& operator/=(S s)
 		{
 			if (0 == s)
