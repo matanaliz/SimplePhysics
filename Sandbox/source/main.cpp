@@ -103,7 +103,7 @@ int main(int argc, char* argv[])
 	else
 		return failedCommandParam();
 
-	// Parse mass parameter
+	// Parse mass parameter (optional)
 	param = getCommandParam(argc, argv, "-m");
 	if (0 != param)
 	{
@@ -116,8 +116,6 @@ int main(int argc, char* argv[])
 
 		argMass = value;
 	}
-	else
-		return failedCommandParam();
 
 	// Get engine object
 	physic::IEngine* engine = physic::IEngine::Instance();
@@ -190,7 +188,8 @@ int main(int argc, char* argv[])
 			render->Crear();
 			
 			long long sleep = static_cast<long long>(10);
-			auto stop = std::chrono::steady_clock::now();
+			auto frameStart = std::chrono::steady_clock::now();
+			auto outerLoopStart = std::chrono::steady_clock::now();
 
 			MSG msg = { 0 };
 			while (TRUE)
@@ -202,31 +201,37 @@ int main(int argc, char* argv[])
 					// Constant framerate at ~16.7 ms, 60 fps
 					static const double dt = 1.0f / 60.0;
 					static const double dtMs = dt * 1000;
+					// Speed up simulation
+					static const double timeScale = 5;
 
 					namespace sc = std::chrono;
 
-					auto start = sc::steady_clock::now();
-					long long frameMs = sc::duration_cast<sc::milliseconds>(start - stop).count();
-					std::cout << "Frame loop: " 
-						<< frameMs << std::endl;
-					stop = std::chrono::steady_clock::now();
+					auto frameStop = sc::steady_clock::now();
+					long long frameMs = sc::duration_cast<sc::milliseconds>(frameStop - frameStart).count();
+					long long outerLoopMs = sc::duration_cast<sc::milliseconds>(frameStop - outerLoopStart).count();
 
+					std::cout << "Frame loop: " << frameMs << std::endl;
+					std::cout << "Outer loop: " << outerLoopMs << std::endl;
+
+					frameStart = std::chrono::steady_clock::now();
 					
 					if (frameMs > dtMs)
 						sleep -= sleep / 4;
 					else
 						sleep += sleep / 4;
 					
-					std::this_thread::sleep_for(sc::milliseconds(sleep));
-
-					std::cout << "Thread sleep: " 
-						<< std::chrono::duration_cast<sc::milliseconds>(std::chrono::steady_clock::now() - start).count() << std::endl;
-
 					// Call engine step with time delta parameter to calculate physics
-					engine->Step(dt);
+					engine->Step(dt * timeScale);
 
 					// Render all objects
 					draw::Render::Instance()->Draw();
+
+					std::this_thread::sleep_for(sc::milliseconds(sleep));
+
+					std::cout << "Thread sleep: "
+						<< std::chrono::duration_cast<sc::milliseconds>(std::chrono::steady_clock::now() - frameStart).count() << std::endl;
+
+					outerLoopStart = std::chrono::steady_clock::now();
 				}
 			}
 		}
