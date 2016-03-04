@@ -16,7 +16,7 @@ namespace physic
 		return std::max(lower, std::min(n, upper));
 	}
 
-	template <typename T>
+	template <typename T = double>
 	class PHYS_API Angle
 	{
 	public:
@@ -30,16 +30,16 @@ namespace physic
 	};
 
 	// Useful aliases
-	using fAngle = Angle<float>;
+	using fAngle = Angle<double>;
 
-	template <typename T>
+	template <typename T = double>
 	class PHYS_API Vec2D
 	{
 	public:
 		T x;
 		T y;
 
-		explicit Vec2D(T vx = 0, T vy = 0) : x(vx), y(vy) {}
+		Vec2D(T vx = 0, T vy = 0) : x(vx), y(vy) {}
 
 		template <typename A>
 		Vec2D(T length, Angle<A> angle) 
@@ -58,6 +58,7 @@ namespace physic
 		// Unary arithmetic operators
 		Vec2D& operator+=(const Vec2D& v) { x += v.x; y += v.y; return *this; }
 		Vec2D& operator-=(const Vec2D& v) { x -= v.x; y -= v.y; return *this; }
+		Vec2D operator-() { return Vec2D<T>(-x, -y); }
 
 		// Unary scalar multiplication and division operators
 		template <typename S> Vec2D& operator*=(S s) { x *= static_cast<T>(s); y *= static_cast<T>(s); return *this; }
@@ -90,7 +91,7 @@ namespace physic
 	template<class T> T EuclideanNorm(const Vec2D<T>& v) { return std::sqrt(v.x * v.x + v.y * v.y); }
 
 	// Useful aliases
-	using fVec2D = Vec2D<float>;
+	using fVec2D = Vec2D<double>;
 
 } // namespace physic
 

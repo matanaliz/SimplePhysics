@@ -12,11 +12,11 @@ namespace draw
 		White = RGB(255, 255, 255)
 	};
 
-	const POINT kAxisCrossPoint = { 50, 50 };
+	const POINT kAxisCrossPoint = { 20, 20 };
 	// How much more pixels radius will be cleaned around basic shape
-	const unsigned kCleanupMargin = 2;
+	const unsigned kCleanupMargin = 1;
 
-	const unsigned kDefaultEntityRadius = 50;
+	const unsigned kDefaultEntityRadius = 10;
 
 	class Entity
 	{
@@ -51,7 +51,7 @@ namespace draw
 		
 	private:
 		Render();
-		~Render() {};
+		~Render() = default;
 
 		HWND m_hWnd;
 

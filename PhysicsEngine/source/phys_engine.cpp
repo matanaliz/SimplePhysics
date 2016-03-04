@@ -2,7 +2,6 @@
 #include <phys_constants.h>
 
 #include <algorithm>
-#include <chrono>
 #include <vector>
 
 using namespace physic;
@@ -10,12 +9,17 @@ using namespace physic;
 class EngineImpl : public IEngine
 {
 public:
-	virtual void SetWorldConstrains(
+	virtual void SetWorldSize(
 		int left = 0, 
 		int bot = 0, 
 		int right = kWorldMarginRight, 
 		int top = kWorldMarginTop) override;
-	virtual void SetGravity(float gravity = kGravity) override;
+
+	virtual void SetWorldConstants(
+		float gravity = kGravity, 
+		float air_density = kAirDragFactor, 
+		float ground_friction = kGroundFriction) override;
+	
 	virtual void AddBody(const BodyPtr&) override;
 	virtual void RemoveBody(const BodyPtr&) override;
 	virtual void Step(double dt) override;
@@ -30,8 +34,6 @@ public:
 
 private:
 
-	void checkWorldRestricitons(BodyPtr&);
-
 	int m_botBorder;
 	int m_leftBorder;
 	int m_upBorder;
@@ -40,9 +42,11 @@ private:
 	std::vector<BodyPtr> m_bodies;
 
 	fVec2D m_gravity;
+	float m_airDrag;
+	float m_groundFricion;
 };
 
-void EngineImpl::SetWorldConstrains(int left, int bot, int right, int top)
+void EngineImpl::SetWorldSize(int left, int bot, int right, int top)
 {
 	// Set world margins
 	m_botBorder = bot;
@@ -51,13 +55,18 @@ void EngineImpl::SetWorldConstrains(int left, int bot, int right, int top)
 	m_leftBorder = left;
 }
 
-void EngineImpl::SetGravity(float gravity /*= kGravity*/)
+void EngineImpl::SetWorldConstants(float gravity, float air_drag, float ground_friction)
 {
+	// Set world margins
 	m_gravity = fVec2D(gravity, fAngle(-90.));
+	m_airDrag = air_drag;
+	m_groundFricion = ground_friction;
 }
+
 
 void EngineImpl::AddBody(const BodyPtr& body)
 {
+
 	m_bodies.push_back(body);
 }
 
@@ -70,20 +79,48 @@ void EngineImpl::Step(double dt)
 {
 	for (auto& body : m_bodies)
 	{
-		/* TODO Check body mass
-				More intensive calculations can be done here like air density, etc */
 		fVec2D velocity = body->GetVelocityVector();
 		fVec2D position = body->GetPosition();
+		const float mass = body->GetMass();
+		const float kBounceFactor = body->GetBounceFactor();
 
-		position += dt * (velocity + dt * (m_gravity / 2));
-		velocity += dt * m_gravity;
+		fVec2D ground_friction_force = { 0, 0 };
+
+		// Check restrictions. Body will bounce at world margins.
+		if (position.x >= m_rightBorder || position.x <= m_leftBorder)
+		{
+			velocity.x *= -kBounceFactor;
+			position.x = Clip(position.x,
+				static_cast<fVec2D::type>(m_leftBorder),
+				static_cast<fVec2D::type>(m_rightBorder));
+		}
+
+		if (position.y >= m_upBorder || position.y <= m_botBorder)
+		{
+			// Applay ground frictions simulation
+			if (position.y <= m_botBorder)
+				// Vector of force is negative to velocity vector
+				ground_friction_force = -m_groundFricion * EuclideanNorm(m_gravity) * mass * velocity
+											/ EuclideanNorm(velocity);
+
+			velocity.y *= -kBounceFactor;
+			position.y = Clip(position.y,
+				static_cast<fVec2D::type>(m_botBorder),
+				static_cast<fVec2D::type>(m_upBorder));
+		}
+
+		//Apply air drag force
+		fVec2D air_drag_force = m_airDrag * -velocity;
+		// Summ of force fectors, gravity force and air drag force
+		fVec2D force = m_gravity * mass + air_drag_force + ground_friction_force;
+		fVec2D acceleration = force / mass;
+
+		// Change position and velocity
+		position += dt * (velocity + (0.5f * acceleration * dt));
+		velocity += dt * acceleration;
 		
 		body->SetPosition(position);
 		body->SetVelocityVector(velocity);
-		
-		/* TODO This can be optimized with some sparce grid and check only wold margin quadrants.
-		also this can be paralleled, collision detection in quadrants etc. */
-		checkWorldRestricitons(body);
 	}
 }
 
@@ -94,36 +131,10 @@ EngineImpl::EngineImpl()
 	, m_rightBorder(kWorldMarginRight)
 	, m_bodies()
 	, m_gravity(0, -kGravity)
+	, m_airDrag(kAirDragFactor)
+	, m_groundFricion(kGroundFriction)
 {
 
-}
-
-void EngineImpl::checkWorldRestricitons(BodyPtr& body)
-{
-	float kBounceConstant = body->GetBounceFactor();
-	
-	fVec2D pos = body->GetPosition();
-
-	// Check restrictions. Body will bounce at world margins.
-	fVec2D vel = body->GetVelocityVector();
-	if (pos.x >= m_rightBorder || pos.x < m_leftBorder)
-	{
-		vel.x *= -kBounceConstant;
-		pos.x = Clip(pos.x, 
-			static_cast<fVec2D::type>(m_leftBorder), 
-			static_cast<fVec2D::type>(m_rightBorder));
-	}
-
-	if (pos.y >= m_upBorder || pos.y < m_botBorder)
-	{
-		vel.y *= -kBounceConstant;
-		pos.y = Clip(pos.y, 
-			static_cast<fVec2D::type>(m_botBorder), 
-			static_cast<fVec2D::type>(m_upBorder));
-	}
-		
-	body->SetVelocityVector(vel);
-	body->SetPosition(pos);
 }
 
 IEngine* IEngine::Instance()

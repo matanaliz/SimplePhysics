@@ -20,15 +20,13 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_MOVING:
 	case WM_ENTERSIZEMOVE:
 	case WM_EXITSIZEMOVE:
-		//
 		draw::Render::Instance()->Crear();
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
 	case WM_PAINT:
-		// Render all objects
-		draw::Render::Instance()->Draw();
+
 		break;
 	case WM_TIMER:
 		break;
@@ -42,8 +40,9 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 void printCommandHelp()
 {
 	std::cout << "Command line options :" << std::endl;
-	std::cout << "--angle : angle in degrees, must be 0 < angle < 90" << std::endl;
-	std::cout << "--vel   : start velocity in m/s" << std::endl;
+	std::cout << "-a : angle in degrees, must be 0 < angle < 90" << std::endl;
+	std::cout << "-v : start velocity in m/s" << std::endl;
+	std::cout << "-m : set mass of object (optional parameter)" << std::endl;
 }
 
 // Check command line for parameter and value
@@ -67,17 +66,19 @@ int main(int argc, char* argv[])
 {
 	/*
 		Command line options:
-		--angle : angle in degrees, must be 0 < angle < 90
-		--vel   : start velocity in m/s
+		-a : angle in degrees, must be 0 < angle < 90
+		-v : start velocity in m/s
+		-m : set mass of object (optional parameter)
 	*/
-	physic::fAngle startAngle = { 0. };
-	physic::fVec2D startVelocity(0, 0);
+	physic::fAngle argAngle = { 0. };
+	physic::fVec2D argVelocity(0, 0);
+	float argMass = 1.;
 
 	if (argc < 4)
 		return failedCommandParam();
 
 	// Parse angle parameter
-	char* param = getCommandParam(argc, argv, "--angle");
+	char* param = getCommandParam(argc, argv, "-a");
 	if (0 != param)
 	{
 		float value = std::stof(param);
@@ -87,20 +88,63 @@ int main(int argc, char* argv[])
 			return failedCommandParam();
 		}
 
-		startAngle = { value };
+		argAngle = { value };
 	}
 	else
 		return failedCommandParam();
 
 	// Parse velocity parameter
-	param = getCommandParam(argc, argv, "--vel");
+	param = getCommandParam(argc, argv, "-v");
 	if (0 != param)
 	{
 		float value = std::stof(param);
-		startVelocity = { value, startAngle };
+		argVelocity = { value, argAngle };
 	}
 	else
 		return failedCommandParam();
+
+	// Parse mass parameter
+	param = getCommandParam(argc, argv, "-m");
+	if (0 != param)
+	{
+		float value = std::stof(param);
+		if ( value < 0.f + 0.1f )
+		{
+			std::cout << "Mass argument is too small, try bigger value." << std::endl;
+			return failedCommandParam();
+		}
+
+		argMass = value;
+	}
+	else
+		return failedCommandParam();
+
+	// Get engine object
+	physic::IEngine* engine = physic::IEngine::Instance();
+
+	{
+		// Physical body. Should be wrapped for correct drawing.
+		physic::BodyPtr body = physic::IBody::GetBody();
+
+		// Set initial position of body
+		body->SetPosition(physic::fVec2D(
+			static_cast<float>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius),
+			static_cast<float>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius)
+			));
+
+		// Set command line argument velocity vector
+		body->SetVelocityVector(argVelocity);
+
+		// Set body mass
+		body->SetMass(argMass);
+
+		// Add body into engine for simulation
+		engine->AddBody(body);
+
+		// Add body to drawing queue
+		draw::Render* render = draw::Render::Instance();
+		render->AddBody(body);
+	}
 
 	const wchar_t* wndClassName = L"wndcls";
 	WNDCLASSEX wndClass = {
@@ -121,48 +165,33 @@ int main(int argc, char* argv[])
 	if (RegisterClassEx(&wndClass))
 	{
 		HWND hWnd = CreateWindowEx(0, wndClassName, L"Sandbox",
-			WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+			WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT,
 			CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, GetModuleHandle(0), 0);
 
 		if (hWnd)
 		{
-			ShowWindow(hWnd, SW_SHOWDEFAULT);
-
-			// Get engine object
-			physic::IEngine* engine = physic::IEngine::Instance();
-			// Set world gravity
-			engine->SetGravity(physic::kGravity);
-			// Set physical simulation constrains e.g. gravity and world size.
-			engine->SetWorldConstrains(
-				draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius, 
-				draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius,
-				2048, 
-				2048);
-
-			// Physical body. Should be wrapped for correct drawing.
-			physic::BodyPtr body = physic::IBody::GetBody();
-
-			// Set initial position of body
-			body->SetPosition(physic::fVec2D(
-				static_cast<float>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius),
-				static_cast<float>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius) 
-			));
-
-			// Set command line argument velocity vector
-			body->SetVelocityVector(startVelocity);
-
-			// Add body into engine for simulation
-			engine->AddBody(body);
-
 			// Set up render
 			draw::Render* render = draw::Render::Instance();
 			render->SetWindowsHandle(hWnd);
-			// Clear background
-			render->Crear();
 
-			// Add body to drawing queue
-			render->AddBody(body);
-		
+			RECT clientArea;
+			GetClientRect(hWnd, &clientArea);
+
+			// Set physical simulation constrains be same as graphics
+			engine->SetWorldSize(
+				draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius,
+				draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius,
+				clientArea.right,
+				clientArea.bottom);
+
+			ShowWindow(hWnd, SW_SHOWDEFAULT);
+			UpdateWindow(hWnd);
+
+			render->Crear();
+			
+			long long sleep = static_cast<long long>(10);
+			auto stop = std::chrono::steady_clock::now();
+
 			MSG msg = { 0 };
 			while (TRUE)
 			{
@@ -170,14 +199,34 @@ int main(int argc, char* argv[])
 				{
 					DispatchMessage(&msg);
 
-					// Stepping should be implemented with native timer
-					static const double dt = 1.0f / 30.0;
-					std::this_thread::sleep_for(std::chrono::milliseconds((int)(dt * 100)));
+					// Constant framerate at ~16.7 ms, 60 fps
+					static const double dt = 1.0f / 60.0;
+					static const double dtMs = dt * 1000;
+
+					namespace sc = std::chrono;
+
+					auto start = sc::steady_clock::now();
+					long long frameMs = sc::duration_cast<sc::milliseconds>(start - stop).count();
+					std::cout << "Frame loop: " 
+						<< frameMs << std::endl;
+					stop = std::chrono::steady_clock::now();
+
+					
+					if (frameMs > dtMs)
+						sleep -= sleep / 4;
+					else
+						sleep += sleep / 4;
+					
+					std::this_thread::sleep_for(sc::milliseconds(sleep));
+
+					std::cout << "Thread sleep: " 
+						<< std::chrono::duration_cast<sc::milliseconds>(std::chrono::steady_clock::now() - start).count() << std::endl;
 
 					// Call engine step with time delta parameter to calculate physics
 					engine->Step(dt);
 
-					// TODO Stop simulation
+					// Render all objects
+					draw::Render::Instance()->Draw();
 				}
 			}
 		}

@@ -8,11 +8,11 @@ class BodyImpl : public IBody
 public:
 	BodyImpl();
 	~BodyImpl() = default;
-	BodyImpl(const BodyImpl&) = default;
-	BodyImpl& operator=(const BodyImpl&) = default;
+	BodyImpl(const BodyImpl&) = delete;
+	BodyImpl& operator=(const BodyImpl&) = delete;
 
-	BodyImpl(BodyImpl&&);
-	BodyImpl& operator=(BodyImpl&&);
+	BodyImpl(BodyImpl&&) = delete;
+	BodyImpl& operator=(BodyImpl&&) = delete;
 
 	virtual fVec2D GetPosition() const override;
 	virtual void SetPosition(const fVec2D&) override;
@@ -35,30 +35,12 @@ private:
 };
 
 BodyImpl::BodyImpl()
-	: m_mass(1)
+	: m_mass(1.f)
 	, m_position(0, 0)
 	, m_velocityVector(0, 0)
 	, m_bounceFactor(kBounceFactor)
 {
 
-}
-
-BodyImpl::BodyImpl(BodyImpl&& rhs)
-	: m_mass(std::move(rhs.m_mass))
-	, m_position(std::move(rhs.m_position))
-	, m_velocityVector(std::move(rhs.m_velocityVector))
-	, m_bounceFactor(std::move(rhs.m_bounceFactor))
-{
-
-}
-
-BodyImpl& BodyImpl::operator=(BodyImpl&& rhs)
-{
-	m_mass = std::move(rhs.m_mass);
-	m_position = std::move(rhs.m_position);
-	m_velocityVector = std::move(rhs.m_position);
-	m_bounceFactor = std::move(rhs.m_bounceFactor);
-	return *this;
 }
 
 fVec2D BodyImpl::GetPosition() const

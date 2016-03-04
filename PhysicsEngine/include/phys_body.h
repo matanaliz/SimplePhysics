@@ -29,7 +29,6 @@ namespace physic
 
 		static BodyPtr GetBody();
 
-	protected:
 		IBody() = default;
 		virtual ~IBody() = default;
 	};

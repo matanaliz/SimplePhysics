@@ -9,8 +9,8 @@ namespace physic
 	class PHYS_API IEngine
 	{
 	public:
-		virtual void SetWorldConstrains(int bot, int top, int xmax, int ymax) = 0;
-		virtual void SetGravity(float gravity) = 0;
+		virtual void SetWorldSize(int bot, int top, int xmax, int ymax) = 0;
+		virtual void SetWorldConstants(float gravity, float air_drag, float ground_friction) = 0;
 		virtual void AddBody(const BodyPtr&) = 0;
 		virtual void RemoveBody(const BodyPtr&) = 0;
 		virtual void Step(double dt) = 0;

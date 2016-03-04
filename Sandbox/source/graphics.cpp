@@ -1,4 +1,5 @@
 #include <graphics.h>
+
 #include <iostream>
 #include <cassert>
 
@@ -64,7 +65,7 @@ namespace draw
 		SetMapMode(hdc, MM_ISOTROPIC);
 
 		// Map logical (0, 0) to bottom-left corner
-		SetWindowExtEx(hdc, 2, 2, NULL);
+		SetWindowExtEx(hdc, 1, 1, NULL);
 		SetViewportExtEx(hdc, 1, -1, NULL);
 
 		SetViewportOrgEx(hdc, 0, clientArea.bottom, NULL);
@@ -101,15 +102,15 @@ namespace draw
 
 		RECT clientArea;
 		GetClientRect(hWnd, &clientArea);
-
-		// Map logical and device coordinates
+		
 		SetGraphicsMode(hdc, GM_ADVANCED);
 		SetMapMode(hdc, MM_ISOTROPIC);
 
-		// Map logical (0, 0) to bottom-left corner
-		SetWindowExtEx(hdc, 2, 2, NULL);
+		// Map logical and device coordinates
+		SetWindowExtEx(hdc, 1, 1, NULL);
 		SetViewportExtEx(hdc, 1, -1, NULL);
 
+		// Map logical (0, 0) to bottom-left corner
 		SetViewportOrgEx(hdc, 0, clientArea.bottom, NULL);
 
 		HPEN blackPen = CreatePen(PS_SOLID, 5, Colors::Black);
