@@ -26,9 +26,33 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		break;
 	case WM_PAINT:
-
 		break;
-	case WM_TIMER:
+	case WM_CHAR:
+		if (VK_SPACE == wParam)
+		{
+			physic::IEngine* engine = physic::IEngine::Instance();
+			// Physical body. Should be wrapped for correct drawing.
+			physic::BodyPtr body = physic::IBody::GetBody();
+
+			// Set initial position of body
+			body->SetPosition(physic::fVec2D(
+				static_cast<float>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
+				static_cast<float>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1)
+				));
+
+			// Set command line argument velocity vector
+			body->SetVelocityVector(physic::fVec2D(150, physic::fAngle(45)));
+
+			// Set body mass
+			body->SetMass(20);
+
+			// Add body into engine for simulation
+			engine->AddBody(body);
+
+			// Add body to drawing queue
+			draw::Render* render = draw::Render::Instance();
+			render->AddBody(body);
+		}
 		break;
 	default:
 		return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -126,8 +150,8 @@ int main(int argc, char* argv[])
 
 		// Set initial position of body
 		body->SetPosition(physic::fVec2D(
-			static_cast<float>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius),
-			static_cast<float>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius)
+			static_cast<float>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
+			static_cast<float>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1)
 			));
 
 		// Set command line argument velocity vector
@@ -196,6 +220,7 @@ int main(int argc, char* argv[])
 			{
 				if (GetMessage(&msg, NULL, 0, 0) >= 0)
 				{
+					TranslateMessage(&msg);
 					DispatchMessage(&msg);
 
 					// Constant framerate at ~16.7 ms, 60 fps
@@ -209,9 +234,6 @@ int main(int argc, char* argv[])
 					auto frameStop = sc::steady_clock::now();
 					long long frameMs = sc::duration_cast<sc::milliseconds>(frameStop - frameStart).count();
 					long long outerLoopMs = sc::duration_cast<sc::milliseconds>(frameStop - outerLoopStart).count();
-
-					std::cout << "Frame loop: " << frameMs << std::endl;
-					std::cout << "Outer loop: " << outerLoopMs << std::endl;
 
 					frameStart = std::chrono::steady_clock::now();
 					
@@ -227,9 +249,6 @@ int main(int argc, char* argv[])
 					draw::Render::Instance()->Draw();
 
 					std::this_thread::sleep_for(sc::milliseconds(sleep));
-
-					std::cout << "Thread sleep: "
-						<< std::chrono::duration_cast<sc::milliseconds>(std::chrono::steady_clock::now() - frameStart).count() << std::endl;
 
 					outerLoopStart = std::chrono::steady_clock::now();
 				}

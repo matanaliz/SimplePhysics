@@ -22,7 +22,7 @@ namespace physic
 	public:
 		Angle(T angle) : m_angle(angle) {}
 		~Angle() = default;
-		T inRad() const { return static_cast<T>(m_angle * kPi / 180); }
+		T inRad() const { return static_cast<T>(m_angle * kPi / 180.f); }
 		T inDeg() const { return m_angle; }
 
 	private:
@@ -89,6 +89,9 @@ namespace physic
 
 	// Get length of vector
 	template<class T> T EuclideanNorm(const Vec2D<T>& v) { return std::sqrt(v.x * v.x + v.y * v.y); }
+	template<class T> T DotProduct(const Vec2D<T>& a, const Vec2D<T>& b) { return a.x * b.x + a.y * b.y; }
+	template<class T> T GetAngle(const Vec2D<T>& a, const Vec2D<T>& b) { return std::acos(DotProduct(a, b) / (EuclideanNorm(a) * EuclideanNorm(b))) * 180.f / kPi; }
+	template<class T> Vec2D<T> Normalized(const Vec2D<T>& v) { return Vec2D<T>(v) / EuclideanNorm(v); }
 
 	// Useful aliases
 	using fVec2D = Vec2D<double>;

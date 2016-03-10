@@ -113,8 +113,8 @@ namespace draw
 		// Map logical (0, 0) to bottom-left corner
 		SetViewportOrgEx(hdc, 0, clientArea.bottom, NULL);
 
-		HPEN blackPen = CreatePen(PS_SOLID, 5, Colors::Black);
-		HPEN whitePen = CreatePen(PS_SOLID, 5, Colors::White);
+		HPEN blackPen = CreatePen(PS_SOLID, 2, Colors::Black);
+		HPEN whitePen = CreatePen(PS_SOLID, 2, Colors::White);
 		// 1. Clean rect for previous position
 		HPEN origPen = (HPEN)SelectObject(hdc, whitePen);
 

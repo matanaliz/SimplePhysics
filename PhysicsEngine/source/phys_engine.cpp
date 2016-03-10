@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <iostream>
 
 using namespace physic;
 
@@ -33,6 +34,11 @@ public:
 	EngineImpl& operator=(EngineImpl&&) = delete;
 
 private:
+
+	// Return penetration distance if collision occurred, else 0.f
+	float checkCollision(const BodyPtr&, const BodyPtr&) const;
+	void solveCollision(const BodyPtr&, const BodyPtr&) const;
+	fVec2D clipPositionToWorldMargins(const fVec2D&) const;
 
 	int m_botBorder;
 	int m_leftBorder;
@@ -81,37 +87,40 @@ void EngineImpl::Step(double dt)
 	{
 		fVec2D velocity = body->GetVelocityVector();
 		fVec2D position = body->GetPosition();
+
+		position = clipPositionToWorldMargins(position);
+
 		const float mass = body->GetMass();
 		const float kBounceFactor = body->GetBounceFactor();
+
+		// O(N^2) collision calculation. Change for quadtree.
+		for (auto& collide : m_bodies)
+		{
+			double peneration = checkCollision(body, collide);
+			if (peneration > 0.f)
+				solveCollision(body, collide);
+		}
 
 		fVec2D ground_friction_force = { 0, 0 };
 
 		// Check restrictions. Body will bounce at world margins.
 		if (position.x >= m_rightBorder || position.x <= m_leftBorder)
-		{
 			velocity.x *= -kBounceFactor;
-			position.x = Clip(position.x,
-				static_cast<fVec2D::type>(m_leftBorder),
-				static_cast<fVec2D::type>(m_rightBorder));
-		}
 
 		if (position.y >= m_upBorder || position.y <= m_botBorder)
 		{
-			// Applay ground frictions simulation
+			// Apply ground frictions simulation
 			if (position.y <= m_botBorder)
 				// Vector of force is negative to velocity vector
 				ground_friction_force = -m_groundFricion * EuclideanNorm(m_gravity) * mass * velocity
 											/ EuclideanNorm(velocity);
 
 			velocity.y *= -kBounceFactor;
-			position.y = Clip(position.y,
-				static_cast<fVec2D::type>(m_botBorder),
-				static_cast<fVec2D::type>(m_upBorder));
 		}
 
 		//Apply air drag force
 		fVec2D air_drag_force = m_airDrag * -velocity;
-		// Summ of force fectors, gravity force and air drag force
+		// Sum of force vectors, gravity force and air drag force
 		fVec2D force = m_gravity * mass + air_drag_force + ground_friction_force;
 		fVec2D acceleration = force / mass;
 
@@ -137,18 +146,71 @@ EngineImpl::EngineImpl()
 
 }
 
+float EngineImpl::checkCollision(const BodyPtr& body, const BodyPtr& collide) const
+{
+	if (body == collide)
+		return 0.f;
+
+	fVec2D position = body->GetPosition();
+	fVec2D collide_position = collide->GetPosition();
+
+	// Get size from body interface
+	static unsigned radius = 10;
+	fVec2D diff = collide_position - position;
+	float penetration = 0.f;
+
+	if ((diff.x * diff.x) + (diff.y * diff.y) <= radius * radius)
+		penetration = std::sqrt((radius * radius) - ((diff.x * diff.x) + (diff.y * diff.y)));
+
+	return penetration;
+}
+
+void EngineImpl::solveCollision(const BodyPtr& body, const BodyPtr& collide) const
+{
+	fVec2D velocity = body->GetVelocityVector();
+	fVec2D position = body->GetPosition();
+	const float mass = body->GetMass();
+
+	fVec2D collide_velocity = collide->GetVelocityVector();
+	fVec2D collide_position = collide->GetPosition();
+
+	fVec2D collision_vector = collide_position - position;
+	fVec2D collision_normal = Normalized(collision_vector);
+
+	const float collide_mass = collide->GetMass();
+
+	fVec2D relative_vel = collide_velocity - velocity;
+	double length_relative = DotProduct(relative_vel, collision_normal);
+
+	// Objects moving in different directions, nothing to solve
+	if (length_relative > 0.f)
+		return;
+
+	// TODO get inverted mass from body
+	double impulse_val = -(1.f + kBounceFactor) * length_relative;
+	impulse_val /= (1 / mass) + (1 / collide_mass);
+
+	fVec2D impulse = impulse_val * collision_normal;
+
+	fVec2D new_vel = velocity - impulse * (1 / mass);
+	fVec2D new_collide_vel = collide_velocity + impulse * (1 / collide_mass);
+
+	body->SetVelocityVector(new_vel);
+	collide->SetVelocityVector(new_collide_vel);
+}
+
+fVec2D EngineImpl::clipPositionToWorldMargins(const fVec2D& pos) const
+{
+	return { Clip(pos.x,
+				static_cast<fVec2D::type>(m_leftBorder),
+				static_cast<fVec2D::type>(m_rightBorder)),
+			 Clip(pos.y,
+				static_cast<fVec2D::type>(m_botBorder),
+				static_cast<fVec2D::type>(m_upBorder)) };
+}
+
 IEngine* IEngine::Instance()
 {
 	static EngineImpl _instance;
 	return &_instance;
-}
-
-IEngine::IEngine()
-{
-
-}
-
-IEngine::~IEngine()
-{
-
 }

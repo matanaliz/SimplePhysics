@@ -17,8 +17,8 @@ namespace physic
 
 		static IEngine* Instance();
 	protected:
-		IEngine();
-		virtual ~IEngine();
+		IEngine() = default;
+		virtual ~IEngine() = default;
 	};
 } // namespace physic
 
