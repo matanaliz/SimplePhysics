@@ -83,6 +83,29 @@ void EngineImpl::RemoveBody(const BodyPtr& body)
 
 void EngineImpl::Step(double dt)
 {
+	static int search_collisions = 0;
+	static int n2_collisions = 0;
+
+	QuadTree<BodyPtr> tree(0, m_leftBorder, m_botBorder, m_rightBorder, m_upBorder);
+
+	for (const auto& body : m_bodies)
+		tree.insert(body);
+
+	//std::vector<BodyPtr> sorted_x = m_bodies;
+	//std::vector<BodyPtr> sorted_y = m_bodies;
+
+	//std::sort(sorted_x.begin(), sorted_x.end(),
+	//	[](const BodyPtr & a, const BodyPtr & b) -> bool
+	//{
+	//	return a->GetPosition().x < b->GetPosition().x;
+	//});
+
+	//std::sort(sorted_y.begin(), sorted_y.end(),
+	//	[](const BodyPtr & a, const BodyPtr & b) -> bool
+	//{
+	//	return a->GetPosition().y < b->GetPosition().y;
+	//});
+
 	for (auto& body : m_bodies)
 	{
 		fVec2D velocity = body->GetVelocityVector();
@@ -93,13 +116,62 @@ void EngineImpl::Step(double dt)
 		const float mass = body->GetMass();
 		const float kBounceFactor = body->GetBounceFactor();
 
-		// O(N^2) collision calculation. Change for quadtree.
-		for (auto& collide : m_bodies)
+		auto colliding = tree.locate(body);
+		for (auto collide : colliding)
 		{
+			search_collisions++;
 			double peneration = checkCollision(body, collide);
 			if (peneration > 0.f)
 				solveCollision(body, collide);
 		}
+
+
+		//auto find = std::find(sorted_x.begin(), sorted_x.end(), body);
+		//if (find != sorted_x.end())
+		//{
+		//	auto start = find;
+		//	auto end = find;
+		//	if (find != sorted_x.begin())
+		//		--start;
+		//	if (find != sorted_x.end())
+		//		++end;
+
+		//	for (auto collide = start; collide != end; ++collide)
+		//	{
+		//		search_collisions++;
+		//		double peneration = checkCollision(body, *collide);
+		//		if (peneration > 0.f)
+		//			solveCollision(body, *collide);
+		//	}
+		//}
+
+		//find = std::find(sorted_y.begin(), sorted_y.end(), body);
+		//if (find != sorted_y.end())
+		//{
+		//	auto start = find;
+		//	auto end = find;
+		//	if (find != sorted_y.begin())
+		//		--start;
+		//	if (find != sorted_y.end())
+		//		++end;
+
+		//	for (auto collide = start; collide != end; ++collide)
+		//	{
+		//		search_collisions++;
+		//		double peneration = checkCollision(body, *collide);
+		//		if (peneration > 0.f)
+		//			solveCollision(body, *collide);
+		//	}
+		//}
+
+		// O(N^2) collision calculation. Change for quadtree.
+		//for (auto& collide : m_bodies)
+		//{
+		//	n2_collisions++;
+		//	double peneration = checkCollision(body, collide);
+		//	if (peneration > 0.f)
+		//		solveCollision(body, collide);
+		//}
 
 		fVec2D ground_friction_force = { 0, 0 };
 
@@ -112,8 +184,9 @@ void EngineImpl::Step(double dt)
 			// Apply ground frictions simulation
 			if (position.y <= m_botBorder)
 				// Vector of force is negative to velocity vector
-				ground_friction_force = -m_groundFricion * EuclideanNorm(m_gravity) * mass * velocity
-											/ EuclideanNorm(velocity);
+				if (m_groundFricion != 0.f)
+					ground_friction_force = -m_groundFricion * EuclideanNorm(m_gravity) * mass * velocity
+												/ EuclideanNorm(velocity);
 
 			velocity.y *= -kBounceFactor;
 		}
@@ -125,12 +198,19 @@ void EngineImpl::Step(double dt)
 		fVec2D acceleration = force / mass;
 
 		// Change position and velocity
-		position += dt * (velocity + (0.5f * acceleration * dt));
-		velocity += dt * acceleration;
+		position += Round(dt * (velocity + (0.5f * acceleration * dt)));
+		velocity += Round(dt * acceleration);
 		
 		body->SetPosition(position);
 		body->SetVelocityVector(velocity);
+
+
 	}
+
+	std::cout << "Search collisions: " << search_collisions << std::endl;
+	std::cout << "n2 collisions: " << n2_collisions << std::endl;
+	search_collisions = 0;
+	n2_collisions = 0;
 }
 
 EngineImpl::EngineImpl()
@@ -173,17 +253,16 @@ void EngineImpl::solveCollision(const BodyPtr& body, const BodyPtr& collide) con
 
 	fVec2D collide_velocity = collide->GetVelocityVector();
 	fVec2D collide_position = collide->GetPosition();
+	const float collide_mass = collide->GetMass();
 
 	fVec2D collision_vector = collide_position - position;
 	fVec2D collision_normal = Normalized(collision_vector);
-
-	const float collide_mass = collide->GetMass();
 
 	fVec2D relative_vel = collide_velocity - velocity;
 	double length_relative = DotProduct(relative_vel, collision_normal);
 
 	// Objects moving in different directions, nothing to solve
-	if (length_relative > 0.f)
+	if (length_relative > 0.f + 0.5f)
 		return;
 
 	// TODO get inverted mass from body
