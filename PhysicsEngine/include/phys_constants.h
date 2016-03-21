@@ -1,6 +1,8 @@
 #ifndef PHYS_CONSTANTS_H
 #define PHYS_CONSTANTS_H
 
+#include <phys_utils.h>
+
 namespace physic
 {
 	const float kGravity = 9.81f;
@@ -10,8 +12,8 @@ namespace physic
 
 	const double kPi = 3.141592;
 
-	const int kWorldMarginRight = 2048;
-	const int kWorldMarginTop = 2048;
+	const Point kWorldBotLeft = { 0, 0 };
+	const Point kWorldTopRight = { 2048, 2048 };
 }
 
 #endif // PHYS_CONSTANTS_H

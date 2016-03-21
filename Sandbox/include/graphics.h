@@ -33,7 +33,7 @@ namespace draw
 
 	private:
 		physic::BodyPtr m_body;
-		physic::fVec2D m_prevPosition;
+		physic::Point m_prevPosition;
 		unsigned m_radius;
 	};
 

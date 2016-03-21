@@ -9,7 +9,7 @@ namespace physic
 	class PHYS_API IEngine
 	{
 	public:
-		virtual void SetWorldSize(int bot, int top, int xmax, int ymax) = 0;
+		virtual void SetWorldMargins(Point bottom_left, Point top_right) = 0;
 		virtual void SetWorldConstants(float gravity, float air_drag, float ground_friction) = 0;
 		virtual void AddBody(const BodyPtr&) = 0;
 		virtual void RemoveBody(const BodyPtr&) = 0;

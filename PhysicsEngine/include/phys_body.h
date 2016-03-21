@@ -15,8 +15,8 @@ namespace physic
 	{
 	public:
 
-		virtual fVec2D GetPosition() const = 0;
-		virtual void SetPosition(const fVec2D&) = 0;
+		virtual Point GetPosition() const = 0;
+		virtual void SetPosition(const Point&) = 0;
 
 		virtual float GetMass() const = 0;
 		virtual void SetMass(float) = 0;

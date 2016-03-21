@@ -35,9 +35,9 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			physic::BodyPtr body = physic::IBody::GetBody();
 
 			// Set initial position of body
-			body->SetPosition(physic::fVec2D(
-				static_cast<float>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
-				static_cast<float>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1)
+			body->SetPosition(physic::Point(
+				static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
+				static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1)
 				));
 
 			// Set command line argument velocity vector
@@ -149,9 +149,9 @@ int main(int argc, char* argv[])
 		physic::BodyPtr body = physic::IBody::GetBody();
 
 		// Set initial position of body
-		body->SetPosition(physic::fVec2D(
-			static_cast<float>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
-			static_cast<float>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1)
+		body->SetPosition(physic::Point(
+			static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
+			static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1)
 			));
 
 		// Set command line argument velocity vector
@@ -199,12 +199,13 @@ int main(int argc, char* argv[])
 			RECT clientArea;
 			GetClientRect(hWnd, &clientArea);
 
+			physic::Point bot = { static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius),
+				static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius) };
+
+			physic::Point top = { static_cast<physic::Point::type>(clientArea.right), static_cast<physic::Point::type>(clientArea.bottom) };
+
 			// Set physical simulation constrains be same as graphics
-			engine->SetWorldSize(
-				draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius,
-				draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius,
-				clientArea.right,
-				clientArea.bottom);
+			engine->SetWorldMargins(bot, top);
 
 			ShowWindow(hWnd, SW_SHOWDEFAULT);
 			UpdateWindow(hWnd);

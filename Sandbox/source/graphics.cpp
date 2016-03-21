@@ -128,7 +128,7 @@ namespace draw
 		SelectObject(hdc, blackPen);
 		
 		// 2. Draw new object
-		physic::fVec2D pos = m_body->GetPosition();
+		physic::Point pos = m_body->GetPosition();
 		Ellipse(hdc,
 			(int)pos.x - m_radius,
 			(int)pos.y - m_radius,

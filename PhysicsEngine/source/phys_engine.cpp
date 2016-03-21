@@ -10,11 +10,9 @@ using namespace physic;
 class EngineImpl : public IEngine
 {
 public:
-	virtual void SetWorldSize(
-		int left = 0, 
-		int bot = 0, 
-		int right = kWorldMarginRight, 
-		int top = kWorldMarginTop) override;
+	virtual void SetWorldMargins(
+		Point bot_left = kWorldBotLeft,
+		Point top_right = kWorldTopRight) override;
 
 	virtual void SetWorldConstants(
 		float gravity = kGravity, 
@@ -38,12 +36,15 @@ private:
 	// Return penetration distance if collision occurred, else 0.f
 	float checkCollision(const BodyPtr&, const BodyPtr&) const;
 	void solveCollision(const BodyPtr&, const BodyPtr&) const;
-	fVec2D clipPositionToWorldMargins(const fVec2D&) const;
+	Point clipPointToWorldMargins(const Point&) const;
 
-	int m_botBorder;
-	int m_leftBorder;
-	int m_upBorder;
-	int m_rightBorder;
+	Point m_botLeft;
+	Point m_topRight;
+
+	//int m_botBorder;
+	//int m_leftBorder;
+	//int m_upBorder;
+	//int m_rightBorder;
 
 	std::vector<BodyPtr> m_bodies;
 
@@ -52,13 +53,11 @@ private:
 	float m_groundFricion;
 };
 
-void EngineImpl::SetWorldSize(int left, int bot, int right, int top)
+void EngineImpl::SetWorldMargins(Point bot_left, Point top_right)
 {
 	// Set world margins
-	m_botBorder = bot;
-	m_upBorder = top;
-	m_rightBorder = right;
-	m_leftBorder = left;
+	m_botLeft = bot_left;
+	m_topRight = top_right;
 }
 
 void EngineImpl::SetWorldConstants(float gravity, float air_drag, float ground_friction)
@@ -69,10 +68,8 @@ void EngineImpl::SetWorldConstants(float gravity, float air_drag, float ground_f
 	m_groundFricion = ground_friction;
 }
 
-
 void EngineImpl::AddBody(const BodyPtr& body)
 {
-
 	m_bodies.push_back(body);
 }
 
@@ -83,10 +80,7 @@ void EngineImpl::RemoveBody(const BodyPtr& body)
 
 void EngineImpl::Step(double dt)
 {
-	//static int search_collisions = 0;
-	//static int n2_collisions = 0;
-
-	QuadTree<BodyPtr> tree(0, m_leftBorder, m_botBorder, m_rightBorder, m_upBorder);
+	QuadTree<BodyPtr> tree(0, m_botLeft.x, m_botLeft.y, m_topRight.x, m_topRight.y);
 
 	for (const auto& body : m_bodies)
 		tree.insert(body);
@@ -94,9 +88,9 @@ void EngineImpl::Step(double dt)
 	for (auto& body : m_bodies)
 	{
 		fVec2D velocity = body->GetVelocityVector();
-		fVec2D position = body->GetPosition();
+		Point position = body->GetPosition();
 
-		position = clipPositionToWorldMargins(position);
+		position = clipPointToWorldMargins(position);
 
 		const float mass = body->GetMass();
 		const float kBounceFactor = body->GetBounceFactor();
@@ -113,13 +107,13 @@ void EngineImpl::Step(double dt)
 		fVec2D ground_friction_force = { 0, 0 };
 
 		// Check restrictions. Body will bounce at world margins.
-		if (position.x >= m_rightBorder || position.x <= m_leftBorder)
+		if (position.x >= m_topRight.x || position.x <= m_botLeft.x)
 			velocity.x *= -kBounceFactor;
 
-		if (position.y >= m_upBorder || position.y <= m_botBorder)
+		if (position.y >= m_topRight.y || position.y <= m_botLeft.y)
 		{
 			// Apply ground frictions simulation
-			if (position.y <= m_botBorder)
+			if (position.y <= m_botLeft.y)
 				// Vector of force is negative to velocity vector
 				if (m_groundFricion != 0.f)
 					ground_friction_force = -m_groundFricion * EuclideanNorm(m_gravity) * mass * velocity
@@ -141,18 +135,11 @@ void EngineImpl::Step(double dt)
 		body->SetPosition(position);
 		body->SetVelocityVector(velocity);
 	}
-
-	//std::cout << "Search collisions: " << search_collisions << std::endl;
-	//std::cout << "n2 collisions: " << n2_collisions << std::endl;
-	//search_collisions = 0;
-	//n2_collisions = 0;
 }
 
 EngineImpl::EngineImpl()
-	: m_botBorder(0)
-	, m_leftBorder(0)
-	, m_upBorder(kWorldMarginTop)
-	, m_rightBorder(kWorldMarginRight)
+	: m_botLeft(kWorldBotLeft)
+	, m_topRight(kWorldTopRight)
 	, m_bodies()
 	, m_gravity(0, -kGravity)
 	, m_airDrag(kAirDragFactor)
@@ -166,8 +153,8 @@ float EngineImpl::checkCollision(const BodyPtr& body, const BodyPtr& collide) co
 	if (body == collide)
 		return 0.f;
 
-	fVec2D position = body->GetPosition();
-	fVec2D collide_position = collide->GetPosition();
+	Point position = body->GetPosition();
+	Point collide_position = collide->GetPosition();
 
 	// Get size from body interface
 	static unsigned radius = 10;
@@ -183,11 +170,11 @@ float EngineImpl::checkCollision(const BodyPtr& body, const BodyPtr& collide) co
 void EngineImpl::solveCollision(const BodyPtr& body, const BodyPtr& collide) const
 {
 	fVec2D velocity = body->GetVelocityVector();
-	fVec2D position = body->GetPosition();
+	Point position = body->GetPosition();
 	const float mass = body->GetMass();
 
 	fVec2D collide_velocity = collide->GetVelocityVector();
-	fVec2D collide_position = collide->GetPosition();
+	Point collide_position = collide->GetPosition();
 	const float collide_mass = collide->GetMass();
 
 	fVec2D collision_vector = collide_position - position;
@@ -213,14 +200,14 @@ void EngineImpl::solveCollision(const BodyPtr& body, const BodyPtr& collide) con
 	collide->SetVelocityVector(new_collide_vel);
 }
 
-fVec2D EngineImpl::clipPositionToWorldMargins(const fVec2D& pos) const
+Point EngineImpl::clipPointToWorldMargins(const Point& pos) const
 {
 	return { Clip(pos.x,
-				static_cast<fVec2D::type>(m_leftBorder),
-				static_cast<fVec2D::type>(m_rightBorder)),
+				static_cast<Point::type>(m_botLeft.x),
+				static_cast<Point::type>(m_topRight.x)),
 			 Clip(pos.y,
-				static_cast<fVec2D::type>(m_botBorder),
-				static_cast<fVec2D::type>(m_upBorder)) };
+			 static_cast<Point::type>(m_botLeft.y),
+			 static_cast<Point::type>(m_topRight.y)) };
 }
 
 IEngine* IEngine::Instance()

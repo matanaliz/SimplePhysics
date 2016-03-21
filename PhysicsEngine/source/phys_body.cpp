@@ -14,8 +14,8 @@ public:
 	BodyImpl(BodyImpl&&) = delete;
 	BodyImpl& operator=(BodyImpl&&) = delete;
 
-	virtual fVec2D GetPosition() const override;
-	virtual void SetPosition(const fVec2D&) override;
+	virtual Point GetPosition() const override;
+	virtual void SetPosition(const Point&) override;
 
 	virtual float GetMass() const override;
 	virtual void SetMass(float) override;
@@ -29,26 +29,26 @@ public:
 private:
 	// TODO get usage of mass and calculate impulses
 	float m_mass;
-	fVec2D m_position;
+	Point m_position;
 	fVec2D m_velocityVector;
 	float m_bounceFactor;
 };
 
 BodyImpl::BodyImpl()
 	: m_mass(1.f)
-	, m_position(0, 0)
-	, m_velocityVector(0, 0)
+	, m_position(0.f, 0.f)
+	, m_velocityVector(0.f, 0.f)
 	, m_bounceFactor(kBounceFactor)
 {
 
 }
 
-fVec2D BodyImpl::GetPosition() const
+Point BodyImpl::GetPosition() const
 {
 	return m_position;
 }
 
-void BodyImpl::SetPosition(const fVec2D& val)
+void BodyImpl::SetPosition(const Point& val)
 {
 	m_position = val;
 }

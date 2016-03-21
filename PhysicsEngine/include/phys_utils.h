@@ -2,7 +2,7 @@
 #define PHYS_UTILS_H
 
 #include <phys_platform.h>
-#include <phys_constants.h>
+//#include <phys_constants.h>
 
 #include <cmath>
 #include <tuple>
@@ -24,7 +24,7 @@ namespace physic
 	public:
 		Angle(T angle) : m_angle(angle) {}
 		~Angle() = default;
-		T inRad() const { return static_cast<T>(m_angle * kPi / 180.f); }
+		T inRad() const { return static_cast<T>(m_angle * 3.141592 / 180.f); }
 		T inDeg() const { return m_angle; }
 
 	private:
@@ -32,7 +32,7 @@ namespace physic
 	};
 
 	// Useful aliases
-	using fAngle = Angle<double>;
+	using fAngle = Angle<float>;
 
 	template <typename T>
 	class PHYS_API Vec2D
@@ -95,7 +95,41 @@ namespace physic
 	template<class T> Vec2D<T> Round(const Vec2D<T>& v) { return Vec2D<T>(std::round(v.x), std::round(v.y)); }
 
 	// Useful aliases
-	using fVec2D = Vec2D<double>;
+	using fVec2D = Vec2D<float>;
+
+	template <typename T>
+	class PHYS_API Point2D
+	{
+	public:
+		T x;
+		T y;
+
+		Point2D(T vx = 0, T vy = 0) : x(vx), y(vy) {}
+		~Point2D() = default;
+
+		Point2D(const Point2D& v) : x(v.x), y(v.y) {}
+		Point2D& operator=(const Point2D& v) { x = v.x; y = v.y; return *this; }
+
+		Point2D(Point2D&& v) : x(std::move(v.x)), y(std::move(v.y)) {}
+		Point2D& operator=(Point2D&& v) { x = std::move(v.x); y = std::move(v.y); return *this; }
+
+		// Unary arithmetic operators
+		Point2D& operator+=(const Point2D& v) { x += v.x; y += v.y; return *this; }
+		Point2D& operator-=(const Point2D& v) { x += v.x; y += v.y; return *this; }
+		
+		Point2D& operator+=(const Vec2D<T>& v) { x += v.x; y += v.y; return *this; }
+		Point2D& operator-=(const Vec2D<T>& v) { x -= v.x; y -= v.y; return *this; }
+
+		Point2D operator-() { return Point2D<T>(-x, -y); }
+
+		typedef T type;
+	};
+
+	// Binary arithmetic operators 
+	template<class T> Vec2D<T> operator+(const Point2D<T>& l, const Point2D<T>& r) { return Vec2D<T>(l.x + r.x, l.y + r.y); }
+	template<class T> Vec2D<T> operator-(const Point2D<T>& l, const Point2D<T>& r) { return Vec2D<T>(l.x - r.x, l.y + r.y); }
+
+	using Point = Point2D<float>;
 
 	template <class T>
 	class QuadTree
@@ -114,7 +148,7 @@ namespace physic
 
 		std::vector<T> locate(const T& body)
 		{
-			fVec2D pos = body->GetPosition();
+			Point pos = body->GetPosition();
 			if (pos.x < m_x || pos.x > m_right ||
 				pos.y < m_y || pos.y > m_top)
 			{
@@ -138,7 +172,7 @@ namespace physic
 
 		bool insert(const T& body)
 		{
-			fVec2D pos = body->GetPosition();
+			Point pos = body->GetPosition();
 			if (pos.x < m_x || pos.x > m_right ||
 				pos.y < m_y || pos.y > m_top)
 			{
