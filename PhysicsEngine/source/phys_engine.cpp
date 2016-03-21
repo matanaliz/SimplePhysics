@@ -33,18 +33,14 @@ public:
 
 private:
 
-	// Return penetration distance if collision occurred, else 0.f
-	float checkCollision(const BodyPtr&, const BodyPtr&) const;
-	void solveCollision(const BodyPtr&, const BodyPtr&) const;
+	bool checkCollision(const BodyPtr&, const BodyPtr&) const;
+
+	void solveCollision(BodyPtr&, BodyPtr&) const;
+
 	Point clipPointToWorldMargins(const Point&) const;
 
 	Point m_botLeft;
 	Point m_topRight;
-
-	//int m_botBorder;
-	//int m_leftBorder;
-	//int m_upBorder;
-	//int m_rightBorder;
 
 	std::vector<BodyPtr> m_bodies;
 
@@ -80,10 +76,12 @@ void EngineImpl::RemoveBody(const BodyPtr& body)
 
 void EngineImpl::Step(double dt)
 {
-	QuadTree<BodyPtr> tree(0, m_botLeft.x, m_botLeft.y, m_topRight.x, m_topRight.y);
-
+	// Fill spatial quadtree
+	QuadTree<BodyPtr> tree(0, m_botLeft, m_topRight);
 	for (const auto& body : m_bodies)
+	{
 		tree.insert(body);
+	}
 
 	for (auto& body : m_bodies)
 	{
@@ -95,15 +93,17 @@ void EngineImpl::Step(double dt)
 		const float mass = body->GetMass();
 		const float kBounceFactor = body->GetBounceFactor();
 
-		auto colliding = tree.locate(body);
+		// Broad phase of collision detection:
+		// Look up for neighbours in quadrant
+		const auto& colliding = tree.locate(body);
 		for (auto collide : colliding)
 		{
-			//search_collisions++;
-			double peneration = checkCollision(body, collide);
-			if (peneration > 0.f)
+			// Narrow phase of collision detection
+ 			if (checkCollision(body, collide))
 				solveCollision(body, collide);
 		}
 
+		// TODO Clean this up
 		fVec2D ground_friction_force = { 0, 0 };
 
 		// Check restrictions. Body will bounce at world margins.
@@ -148,54 +148,50 @@ EngineImpl::EngineImpl()
 
 }
 
-float EngineImpl::checkCollision(const BodyPtr& body, const BodyPtr& collide) const
+bool EngineImpl::checkCollision(const BodyPtr& body, const BodyPtr& collide) const
 {
 	if (body == collide)
-		return 0.f;
+		return false;
 
-	Point position = body->GetPosition();
-	Point collide_position = collide->GetPosition();
+	const Point position = body->GetPosition();
+	const Point collide_position = collide->GetPosition();
 
 	// Get size from body interface
 	static unsigned radius = 10;
-	fVec2D diff = collide_position - position;
-	float penetration = 0.f;
-
-	if ((diff.x * diff.x) + (diff.y * diff.y) <= radius * radius)
-		penetration = std::sqrt((radius * radius) - ((diff.x * diff.x) + (diff.y * diff.y)));
-
-	return penetration;
+	const fVec2D distance = collide_position - position;
+	return (distance.x * distance.x) + (distance.y * distance.y) <= radius * radius;
 }
 
-void EngineImpl::solveCollision(const BodyPtr& body, const BodyPtr& collide) const
+void EngineImpl::solveCollision(BodyPtr& body, BodyPtr& collide) const
 {
-	fVec2D velocity = body->GetVelocityVector();
-	Point position = body->GetPosition();
+	const fVec2D velocity = body->GetVelocityVector();
+	const Point position = body->GetPosition();
 	const float mass = body->GetMass();
 
-	fVec2D collide_velocity = collide->GetVelocityVector();
-	Point collide_position = collide->GetPosition();
+	const fVec2D collide_velocity = collide->GetVelocityVector();
+	const Point collide_position = collide->GetPosition();
 	const float collide_mass = collide->GetMass();
 
-	fVec2D collision_vector = collide_position - position;
-	fVec2D collision_normal = Normalized(collision_vector);
+	const fVec2D collision_vector = collide_position - position;
+	const fVec2D collision_normal = Normalized(collision_vector);
 
-	fVec2D relative_vel = collide_velocity - velocity;
-	double length_relative = DotProduct(relative_vel, collision_normal);
+	const fVec2D relative_vel = collide_velocity - velocity;
+	const double length_relative = DotProduct(relative_vel, collision_normal);
 
 	// Objects moving in different directions, nothing to solve
-	if (length_relative > 0.f + 0.5f)
+	if (length_relative > 0.f)
 		return;
 
 	// TODO get inverted mass from body
 	double impulse_val = -(1.f + kBounceFactor) * length_relative;
 	impulse_val /= (1 / mass) + (1 / collide_mass);
 
-	fVec2D impulse = impulse_val * collision_normal;
+	const fVec2D impulse = impulse_val * collision_normal;
 
-	fVec2D new_vel = velocity - impulse * (1 / mass);
-	fVec2D new_collide_vel = collide_velocity + impulse * (1 / collide_mass);
+	const fVec2D new_vel = velocity - impulse * (1 / mass);
+	const fVec2D new_collide_vel = collide_velocity + impulse * (1 / collide_mass);
 
+	// Modify body and collider
 	body->SetVelocityVector(new_vel);
 	collide->SetVelocityVector(new_collide_vel);
 }

@@ -115,10 +115,12 @@ namespace physic
 
 		// Unary arithmetic operators
 		Point2D& operator+=(const Point2D& v) { x += v.x; y += v.y; return *this; }
-		Point2D& operator-=(const Point2D& v) { x += v.x; y += v.y; return *this; }
+		Point2D& operator-=(const Point2D& v) { x -= v.x; y -= v.y; return *this; }
 		
-		Point2D& operator+=(const Vec2D<T>& v) { x += v.x; y += v.y; return *this; }
-		Point2D& operator-=(const Vec2D<T>& v) { x -= v.x; y -= v.y; return *this; }
+		template <typename U>
+		Point2D& operator+=(const Vec2D<U>& v) { x += v.x; y += v.y; return *this; }
+		template <typename U>
+		Point2D& operator-=(const Vec2D<U>& v) { x -= v.x; y -= v.y; return *this; }
 
 		Point2D operator-() { return Point2D<T>(-x, -y); }
 
@@ -126,42 +128,56 @@ namespace physic
 	};
 
 	// Binary arithmetic operators 
-	template<class T> Vec2D<T> operator+(const Point2D<T>& l, const Point2D<T>& r) { return Vec2D<T>(l.x + r.x, l.y + r.y); }
-	template<class T> Vec2D<T> operator-(const Point2D<T>& l, const Point2D<T>& r) { return Vec2D<T>(l.x - r.x, l.y + r.y); }
+	template<typename T> 
+	Vec2D<T> operator+(const Point2D<T>& l, const Point2D<T>& r) { return Vec2D<T>(l.x + r.x, l.y + r.y); }
+	template<typename T>
+	Vec2D<T> operator-(const Point2D<T>& l, const Point2D<T>& r) { return Vec2D<T>(l.x - r.x, l.y - r.y); }
+
+	template<class T> bool IsPointInRect(const Point2D<T>& p, const Point2D<T>& bot_left, const Point2D<T>& top_right)
+	{
+		return  p.x >= bot_left.x && p.x <= top_right.x &&
+				p.y >= bot_left.y && p.y <= top_right.y;
+	}
 
 	using Point = Point2D<float>;
+
+	class PHYS_API Mass
+	{
+	public:
+		float mass;
+		float inv_mass;
+
+		explicit Mass(float m) : mass(m), inv_mass(m ? 1.f / m : 0.f) {}
+	};
 
 	template <class T>
 	class QuadTree
 	{
 	public:
-		const int kMaxObjects = 4;
-		QuadTree(int level, int x, int y, int right, int top)
+		const size_t kMaxObjects = 4;
+		QuadTree(int level, Point bot_left, Point top_right)
 			: m_level(level)
-			, m_x(x)
-			, m_y(y)
-			, m_top(top)
-			, m_right(right)
+			, m_botLeft(bot_left)
+			, m_topRight(top_right)
 		{
 
 		}
 
-		std::vector<T> locate(const T& body)
+		std::vector<T> locate(const T& body) const
 		{
 			Point pos = body->GetPosition();
-			if (pos.x < m_x || pos.x > m_right ||
-				pos.y < m_y || pos.y > m_top)
+			if (!IsPointInRect(pos, m_botLeft, m_topRight))
 			{
 				return {};
 			}
 
-			if (!m_objects.empty())
+			if (!m_objects.empty() && m_objects.size() > 1)
 				return m_objects;
 
 			// TODO rewrite this has so much copy
 			std::vector<T> res;
 			if (!m_nodes.empty())
-				for (auto node : m_nodes)
+				for (const auto& node : m_nodes)
 				{
 					std::vector<T> tmp = node.locate(body);
 					res.insert(res.begin(), tmp.cbegin(), tmp.cend());
@@ -173,8 +189,7 @@ namespace physic
 		bool insert(const T& body)
 		{
 			Point pos = body->GetPosition();
-			if (pos.x < m_x || pos.x > m_right ||
-				pos.y < m_y || pos.y > m_top)
+			if (!IsPointInRect(pos, m_botLeft, m_topRight))
 			{
 				return false;
 			}
@@ -187,13 +202,17 @@ namespace physic
 
 			if (m_nodes.empty())
 			{
-				int mid_x = m_x + (m_right - m_x) / 2;
-				int mid_y = m_y + (m_top - m_y) / 2;
+				const int m_x = m_botLeft.x;
+				const int m_y = m_botLeft.y;
+				const int m_right = m_topRight.x;
+				const int m_top = m_topRight.y;
+				const int mid_x = m_botLeft.x + (m_topRight.x - m_botLeft.x) / 2;
+				const int mid_y = m_botLeft.y + (m_topRight.y - m_botLeft.y) / 2;
 
-				m_nodes.push_back(QuadTree(m_level + 1, m_x, m_y, mid_x, mid_y));
-				m_nodes.push_back(QuadTree(m_level + 1, m_x, mid_y, mid_x, m_top));
-				m_nodes.push_back(QuadTree(m_level + 1, mid_x, m_y, m_right, mid_y));
-				m_nodes.push_back(QuadTree(m_level + 1, mid_x, mid_y, m_right, m_top));
+				m_nodes.push_back(QuadTree(m_level + 1, m_botLeft, Point(mid_x, mid_y)));
+				m_nodes.push_back(QuadTree(m_level + 1, Point(m_x, mid_y), Point(mid_x, m_top)));
+				m_nodes.push_back(QuadTree(m_level + 1, Point(mid_x, m_y), Point(m_right, mid_y)));
+				m_nodes.push_back(QuadTree(m_level + 1, Point(mid_x, mid_y), m_topRight));
 			}
 
 			for (auto& node : m_nodes)
@@ -202,6 +221,7 @@ namespace physic
 
 			return false;
 		}
+
 		void clear()
 		{
 			m_objects.clear();
@@ -212,10 +232,8 @@ namespace physic
 
 	private:
 		int m_level;
-		int m_x;
-		int m_y;
-		int m_top;
-		int m_right;
+		Point m_botLeft;
+		Point m_topRight;
 
 		std::vector<T> m_objects;
 		std::vector<QuadTree> m_nodes;
