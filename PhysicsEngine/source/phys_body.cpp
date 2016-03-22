@@ -7,6 +7,7 @@ class BodyImpl : public IBody
 {
 public:
 	BodyImpl();
+	BodyImpl(Point, fVec2D, float);
 	~BodyImpl() = default;
 	BodyImpl(const BodyImpl&) = delete;
 	BodyImpl& operator=(const BodyImpl&) = delete;
@@ -17,8 +18,8 @@ public:
 	virtual Point GetPosition() const override;
 	virtual void SetPosition(const Point&) override;
 
-	virtual float GetMass() const override;
-	virtual void SetMass(float) override;
+	virtual Mass GetMass() const override;
+	virtual void SetMass(Mass) override;
 
 	virtual fVec2D GetVelocityVector() const override;
 	virtual void SetVelocityVector(const fVec2D&) override;
@@ -28,20 +29,27 @@ public:
 
 private:
 	// TODO get usage of mass and calculate impulses
-	float m_mass;
 	Point m_position;
 	fVec2D m_velocityVector;
+	Mass m_mass;
 	float m_bounceFactor;
 };
 
 BodyImpl::BodyImpl()
-	: m_mass(1.f)
-	, m_position(0.f, 0.f)
+	: m_position(0.f, 0.f)
 	, m_velocityVector(0.f, 0.f)
+	, m_mass(1.f)
 	, m_bounceFactor(kBounceFactor)
 {
 
 }
+
+BodyImpl::BodyImpl(Point pos, fVec2D vel, float mass)
+	: m_position(pos)
+	, m_velocityVector(vel)
+	, m_mass(mass)
+	, m_bounceFactor(kBounceFactor)
+{}
 
 Point BodyImpl::GetPosition() const
 {
@@ -53,12 +61,12 @@ void BodyImpl::SetPosition(const Point& val)
 	m_position = val;
 }
 
-float BodyImpl::GetMass() const
+Mass BodyImpl::GetMass() const
 {
 	return m_mass;
 }
 
-void BodyImpl::SetMass(float mass)
+void BodyImpl::SetMass(Mass mass)
 {
 	m_mass = mass;
 }
@@ -85,10 +93,8 @@ void BodyImpl::SetBounceFactor(float bounceFactor)
 
 BodyPtr IBody::CreateBody(const Point& position, const fVec2D& velocity, float mass)
 {
-	auto ptr = std::shared_ptr<IBody>(new (std::nothrow) BodyImpl());
+	auto ptr = std::shared_ptr<IBody>(new (std::nothrow) BodyImpl(position, velocity, mass));
 	assert(nullptr != ptr);
-	ptr->SetPosition(position);
-	ptr->SetVelocityVector(velocity);
-	ptr->SetMass(mass);
+
 	return ptr;
 }

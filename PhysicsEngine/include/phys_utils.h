@@ -24,7 +24,7 @@ namespace physic
 	public:
 		Angle(T angle) : m_angle(angle) {}
 		~Angle() = default;
-		T inRad() const { return static_cast<T>(m_angle * 3.141592 / 180.f); }
+		T inRad() const { return static_cast<T>(m_angle * kPi / 180.f); }
 		T inDeg() const { return m_angle; }
 
 	private:
@@ -147,97 +147,7 @@ namespace physic
 		float mass;
 		float inv_mass;
 
-		explicit Mass(float m) : mass(m), inv_mass(m ? 1.f / m : 0.f) {}
-	};
-
-	template <class T>
-	class QuadTree
-	{
-	public:
-		const size_t kMaxObjects = 8;
-		QuadTree(int level, Point bot_left, Point top_right)
-			: m_level(level)
-			, m_botLeft(bot_left)
-			, m_topRight(top_right)
-		{
-
-		}
-
-		std::vector<T> locate(const T& body) const
-		{
-			Point pos = body->GetPosition();
-			if (!IsPointInRect(pos, m_botLeft, m_topRight))
-			{
-				return {};
-			}
-
-			if (!m_objects.empty() && m_objects.size() > 1)
-				return m_objects;
-
-			// TODO rewrite this has so much copy
-			std::vector<T> res;
-			if (!m_nodes.empty())
-				for (const auto& node : m_nodes)
-				{
-					std::vector<T> tmp = node.locate(body);
-					res.insert(res.begin(), tmp.cbegin(), tmp.cend());
-				}
-
-			return res;
-		}
-
-		bool insert(const T& body)
-		{
-			Point pos = body->GetPosition();
-			if (!IsPointInRect(pos, m_botLeft, m_topRight))
-			{
-				return false;
-			}
-
-			if (m_objects.size() < kMaxObjects)
-			{
-				m_objects.push_back(body);
-				return true;
-			}
-
-			if (m_nodes.empty())
-			{
-				const int m_x = m_botLeft.x;
-				const int m_y = m_botLeft.y;
-				const int m_right = m_topRight.x;
-				const int m_top = m_topRight.y;
-				const int mid_x = m_botLeft.x + (m_topRight.x - m_botLeft.x) / 2;
-				const int mid_y = m_botLeft.y + (m_topRight.y - m_botLeft.y) / 2;
-
-				m_nodes.push_back(QuadTree(m_level + 1, m_botLeft, Point(mid_x, mid_y)));
-				m_nodes.push_back(QuadTree(m_level + 1, Point(m_x, mid_y), Point(mid_x, m_top)));
-				m_nodes.push_back(QuadTree(m_level + 1, Point(mid_x, m_y), Point(m_right, mid_y)));
-				m_nodes.push_back(QuadTree(m_level + 1, Point(mid_x, mid_y), m_topRight));
-			}
-
-			for (auto& node : m_nodes)
-				if (node.insert(body))
-					return true;
-
-			return false;
-		}
-
-		void clear()
-		{
-			m_objects.clear();
-
-			for (auto node : m_nodes)
-				node.clear();
-		}
-
-	private:
-		int m_level;
-		Point m_botLeft;
-		Point m_topRight;
-
-		std::vector<T> m_objects;
-		std::vector<QuadTree> m_nodes;
-
+		Mass(float m) : mass(m), inv_mass(m ? 1.f / m : 0.f) {}
 	};
 
 } // namespace physic

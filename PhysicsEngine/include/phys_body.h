@@ -21,8 +21,8 @@ namespace physic
 		virtual fVec2D GetVelocityVector() const = 0;
 		virtual void SetVelocityVector(const fVec2D&) = 0;
 
-		virtual float GetMass() const = 0;
-		virtual void SetMass(float) = 0;
+		virtual Mass GetMass() const = 0;
+		virtual void SetMass(Mass) = 0;
 
 		virtual float GetBounceFactor() const = 0;
 		virtual void SetBounceFactor(float) = 0;
