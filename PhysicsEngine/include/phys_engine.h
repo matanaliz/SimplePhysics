@@ -11,7 +11,7 @@ namespace physic
 	public:
 		virtual void SetWorldMargins(Point bottom_left, Point top_right) = 0;
 		virtual void SetWorldConstants(float gravity, float air_drag, float ground_friction) = 0;
-		virtual void AddBody(const BodyPtr&) = 0;
+		virtual void AddBody(BodyPtr&) = 0;
 		virtual void RemoveBody(const BodyPtr&) = 0;
 		virtual void Step(double dt) = 0;
 

@@ -83,7 +83,12 @@ void BodyImpl::SetBounceFactor(float bounceFactor)
 	m_bounceFactor = bounceFactor;
 }
 
-BodyPtr IBody::GetBody()
+BodyPtr IBody::CreateBody(const Point& position, const fVec2D& velocity, float mass)
 {
-	return std::shared_ptr<IBody>(new (std::nothrow) BodyImpl());
+	auto ptr = std::shared_ptr<IBody>(new (std::nothrow) BodyImpl());
+	assert(nullptr != ptr);
+	ptr->SetPosition(position);
+	ptr->SetVelocityVector(velocity);
+	ptr->SetMass(mass);
+	return ptr;
 }

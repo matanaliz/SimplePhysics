@@ -31,20 +31,13 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		if (VK_SPACE == wParam)
 		{
 			physic::IEngine* engine = physic::IEngine::Instance();
+
+			const physic::Point pos = { static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
+				static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1) };
+			const physic::fVec2D vel = physic::fVec2D(150, physic::fAngle(45));
+
 			// Physical body. Should be wrapped for correct drawing.
-			physic::BodyPtr body = physic::IBody::GetBody();
-
-			// Set initial position of body
-			body->SetPosition(physic::Point(
-				static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
-				static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1)
-				));
-
-			// Set command line argument velocity vector
-			body->SetVelocityVector(physic::fVec2D(150, physic::fAngle(45)));
-
-			// Set body mass
-			body->SetMass(20);
+			physic::BodyPtr body = physic::IBody::CreateBody(pos, vel, 20);
 
 			// Add body into engine for simulation
 			engine->AddBody(body);
@@ -94,9 +87,9 @@ int main(int argc, char* argv[])
 		-v : start velocity in m/s
 		-m : set mass of object (optional parameter)
 	*/
-	physic::fAngle argAngle = { 0. };
-	physic::fVec2D argVelocity(0, 0);
-	float argMass = 1.;
+	physic::fAngle argAngle { 0.f };
+	physic::fVec2D argVelocity{ 0.f, 0.f };
+	float argMass { 1.f };
 
 	if (argc < 4)
 		return failedCommandParam();
@@ -138,27 +131,21 @@ int main(int argc, char* argv[])
 			return failedCommandParam();
 		}
 
-		argMass = value;
+		argMass = { value };
 	}
 
 	// Get engine object
 	physic::IEngine* engine = physic::IEngine::Instance();
 
 	{
-		// Physical body. Should be wrapped for correct drawing.
-		physic::BodyPtr body = physic::IBody::GetBody();
-
 		// Set initial position of body
-		body->SetPosition(physic::Point(
+		physic::Point pos { 
 			static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
-			static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1)
-			));
+			static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1) 
+			};
 
-		// Set command line argument velocity vector
-		body->SetVelocityVector(argVelocity);
-
-		// Set body mass
-		body->SetMass(argMass);
+		// Physical body. Should be wrapped for correct drawing.
+		physic::BodyPtr body = physic::IBody::CreateBody(pos, argVelocity, argMass);
 
 		// Add body into engine for simulation
 		engine->AddBody(body);
@@ -199,10 +186,15 @@ int main(int argc, char* argv[])
 			RECT clientArea;
 			GetClientRect(hWnd, &clientArea);
 
-			physic::Point bot = { static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius),
-				static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius) };
+			const physic::Point bot { 
+				static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius),
+				static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius) 
+			};
 
-			physic::Point top = { static_cast<physic::Point::type>(clientArea.right), static_cast<physic::Point::type>(clientArea.bottom) };
+			const physic::Point top { 
+				static_cast<physic::Point::type>(clientArea.right), 
+				static_cast<physic::Point::type>(clientArea.bottom) 
+			};
 
 			// Set physical simulation constrains be same as graphics
 			engine->SetWorldMargins(bot, top);
@@ -212,11 +204,12 @@ int main(int argc, char* argv[])
 
 			render->Crear();
 			
-			long long sleep = static_cast<long long>(10);
-			auto frameStart = std::chrono::steady_clock::now();
-			auto outerLoopStart = std::chrono::steady_clock::now();
+			// TODO Rewrite whole loop for steady fps
+			long long sleep	{ 10 };
+			auto frameStart	= std::chrono::steady_clock::now();
+			auto outerLoopStart	= std::chrono::steady_clock::now();
 
-			MSG msg = { 0 };
+			MSG msg { 0 };
 			while (TRUE)
 			{
 				if (GetMessage(&msg, NULL, 0, 0) >= 0)

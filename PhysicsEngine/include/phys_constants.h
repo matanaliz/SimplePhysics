@@ -7,8 +7,8 @@ namespace physic
 {
 	const float kGravity = 9.81f;
 	const float kBounceFactor = 0.75f;
-	const float kAirDragFactor = 0.0f;
-	const float kGroundFriction = 0.0f;
+	const float kAirDragFactor = 0.f;
+	const float kGroundFriction = 0.f;
 
 	const double kPi = 3.141592;
 

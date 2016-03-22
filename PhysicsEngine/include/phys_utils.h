@@ -154,7 +154,7 @@ namespace physic
 	class QuadTree
 	{
 	public:
-		const size_t kMaxObjects = 4;
+		const size_t kMaxObjects = 8;
 		QuadTree(int level, Point bot_left, Point top_right)
 			: m_level(level)
 			, m_botLeft(bot_left)

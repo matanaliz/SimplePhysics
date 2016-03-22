@@ -19,7 +19,7 @@ public:
 		float air_density = kAirDragFactor, 
 		float ground_friction = kGroundFriction) override;
 	
-	virtual void AddBody(const BodyPtr&) override;
+	virtual void AddBody(BodyPtr&) override;
 	virtual void RemoveBody(const BodyPtr&) override;
 	virtual void Step(double dt) override;
 
@@ -64,7 +64,7 @@ void EngineImpl::SetWorldConstants(float gravity, float air_drag, float ground_f
 	m_groundFricion = ground_friction;
 }
 
-void EngineImpl::AddBody(const BodyPtr& body)
+void EngineImpl::AddBody(BodyPtr& body)
 {
 	m_bodies.push_back(body);
 }
@@ -115,7 +115,7 @@ void EngineImpl::Step(double dt)
 			// Apply ground frictions simulation
 			if (position.y <= m_botLeft.y)
 				// Vector of force is negative to velocity vector
-				if (m_groundFricion != 0.f)
+				if (m_groundFricion > 0.f)
 					ground_friction_force = -m_groundFricion * EuclideanNorm(m_gravity) * mass * velocity
 												/ EuclideanNorm(velocity);
 
@@ -153,26 +153,21 @@ bool EngineImpl::checkCollision(const BodyPtr& body, const BodyPtr& collide) con
 	if (body == collide)
 		return false;
 
-	const Point position = body->GetPosition();
-	const Point collide_position = collide->GetPosition();
-
 	// Get size from body interface
-	static unsigned radius = 10;
-	const fVec2D distance = collide_position - position;
+	static unsigned radius = 20;
+	const fVec2D distance = collide->GetPosition() - body->GetPosition();
 	return (distance.x * distance.x) + (distance.y * distance.y) <= radius * radius;
 }
 
 void EngineImpl::solveCollision(BodyPtr& body, BodyPtr& collide) const
 {
 	const fVec2D velocity = body->GetVelocityVector();
-	const Point position = body->GetPosition();
 	const float mass = body->GetMass();
 
 	const fVec2D collide_velocity = collide->GetVelocityVector();
-	const Point collide_position = collide->GetPosition();
 	const float collide_mass = collide->GetMass();
 
-	const fVec2D collision_vector = collide_position - position;
+	const fVec2D collision_vector = collide->GetPosition() - body->GetPosition();
 	const fVec2D collision_normal = Normalized(collision_vector);
 
 	const fVec2D relative_vel = collide_velocity - velocity;
