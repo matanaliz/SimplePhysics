@@ -30,14 +30,16 @@ public:
 private:
 	// TODO get usage of mass and calculate impulses
 	Point m_position;
-	fVec2D m_velocityVector;
+	fVec2D m_velocity;
 	Mass m_mass;
+
+	// Leave "bounciness" to some "material"
 	float m_bounceFactor;
 };
 
 BodyImpl::BodyImpl()
 	: m_position(0.f, 0.f)
-	, m_velocityVector(0.f, 0.f)
+	, m_velocity(0.f, 0.f)
 	, m_mass(1.f)
 	, m_bounceFactor(kBounceFactor)
 {
@@ -46,7 +48,7 @@ BodyImpl::BodyImpl()
 
 BodyImpl::BodyImpl(Point pos, fVec2D vel, float mass)
 	: m_position(pos)
-	, m_velocityVector(vel)
+	, m_velocity(vel)
 	, m_mass(mass)
 	, m_bounceFactor(kBounceFactor)
 {}
@@ -73,12 +75,12 @@ void BodyImpl::SetMass(Mass mass)
 
 fVec2D BodyImpl::GetVelocityVector() const
 {
-	return m_velocityVector;
+	return m_velocity;
 }
 
 void BodyImpl::SetVelocityVector(const fVec2D& val)
 {
-	m_velocityVector = val;
+	m_velocity = val;
 }
 
 float BodyImpl::GetBounceFactor() const
