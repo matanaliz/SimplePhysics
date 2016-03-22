@@ -1,13 +1,22 @@
 #include <phys_body.h>
 #include <phys_constants.h>
 
-// TODO move BodyImpl to private include header
 using namespace physic;
+
+class ShapeCircle : public IShape
+{
+public:
+	ShapeCircle(ShapeType) {};
+	ShapeType GetShapeType() const override { return ShapeType::Circle; };
+	int GetRadius() const override { return 10; };
+};
+
+// TODO move BodyImpl to private include header
 class BodyImpl : public IBody
 {
 public:
 	BodyImpl();
-	BodyImpl(Point, fVec2D, float);
+	BodyImpl(IShape::ShapeType, Point, fVec2D, float);
 	~BodyImpl() = default;
 	BodyImpl(const BodyImpl&) = delete;
 	BodyImpl& operator=(const BodyImpl&) = delete;
@@ -33,6 +42,8 @@ private:
 	fVec2D m_velocity;
 	Mass m_mass;
 
+	std::unique_ptr<IShape> m_shape;
+
 	// Leave "bounciness" to some "material"
 	float m_bounceFactor;
 };
@@ -41,15 +52,17 @@ BodyImpl::BodyImpl()
 	: m_position(0.f, 0.f)
 	, m_velocity(0.f, 0.f)
 	, m_mass(1.f)
+	, m_shape(new (std::nothrow) ShapeCircle(IShape::ShapeType::Circle))
 	, m_bounceFactor(kBounceFactor)
 {
 
 }
 
-BodyImpl::BodyImpl(Point pos, fVec2D vel, float mass)
+BodyImpl::BodyImpl(IShape::ShapeType shape, Point pos, fVec2D vel, float mass)
 	: m_position(pos)
 	, m_velocity(vel)
 	, m_mass(mass)
+	, m_shape(new (std::nothrow) ShapeCircle(shape))
 	, m_bounceFactor(kBounceFactor)
 {}
 
@@ -93,9 +106,9 @@ void BodyImpl::SetBounceFactor(float bounceFactor)
 	m_bounceFactor = bounceFactor;
 }
 
-BodyPtr IBody::CreateBody(const Point& position, const fVec2D& velocity, float mass)
+BodyPtr IBody::CreateBody(IShape::ShapeType shape, const Point& position, const fVec2D& velocity, float mass)
 {
-	auto ptr = std::shared_ptr<IBody>(new (std::nothrow) BodyImpl(position, velocity, mass));
+	auto ptr = std::shared_ptr<IBody>(new (std::nothrow) BodyImpl(shape, position, velocity, mass));
 	assert(nullptr != ptr);
 
 	return ptr;

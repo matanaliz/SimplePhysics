@@ -37,7 +37,7 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			const physic::fVec2D vel = physic::fVec2D(150, physic::fAngle(45));
 
 			// Physical body. Should be wrapped for correct drawing.
-			physic::BodyPtr body = physic::IBody::CreateBody(pos, vel, 20);
+			physic::BodyPtr body = physic::IBody::CreateBody(physic::IShape::ShapeType::Circle, pos, vel, 20);
 
 			// Add body into engine for simulation
 			engine->AddBody(body);
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
 			};
 
 		// Physical body. Should be wrapped for correct drawing.
-		physic::BodyPtr body = physic::IBody::CreateBody(pos, argVelocity, argMass);
+		physic::BodyPtr body = physic::IBody::CreateBody(physic::IShape::ShapeType::Circle, pos, argVelocity, argMass);
 
 		// Add body into engine for simulation
 		engine->AddBody(body);
