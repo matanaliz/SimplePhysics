@@ -11,6 +11,9 @@ namespace physic
 	class IBody;
 	using BodyPtr = std::shared_ptr<IBody>;
 
+	class IShape;
+	using ShapePtr = std::shared_ptr<IShape>;
+
 	class PHYS_API IShape
 	{
 	public:
@@ -43,6 +46,8 @@ namespace physic
 
 		virtual float GetBounceFactor() const = 0;
 		virtual void SetBounceFactor(float) = 0;
+
+		virtual ShapePtr GetShape() const = 0;
 
 		static BodyPtr CreateBody(IShape::ShapeType shape, const Point& position, const fVec2D& velocity, float mass);
 

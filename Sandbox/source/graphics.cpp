@@ -20,7 +20,7 @@ namespace draw
 
 	void Render::AddBody(const physic::BodyPtr& body)
 	{
-		m_enteties.push_back(std::shared_ptr<Entity>(new (std::nothrow) Entity(body)));
+		m_enteties.push_back(std::shared_ptr<Entity>(std::make_shared<Entity>(Entity(body))));
 	}
 
 	void Render::SetWindowsHandle(HWND hWnd)
@@ -91,6 +91,14 @@ namespace draw
 		: m_body(body)
 		, m_prevPosition(m_body->GetPosition())
 		, m_radius(radius)
+	{
+
+	}
+
+	Entity::Entity(Entity&& other)
+		: m_body(std::move(other.m_body))
+		, m_prevPosition(std::move(other.m_prevPosition))
+		, m_radius(std::move(other.m_radius))
 	{
 
 	}

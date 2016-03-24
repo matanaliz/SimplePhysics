@@ -26,7 +26,8 @@ namespace draw
 
 		Entity(const Entity&) = delete;
 		Entity& operator=(const Entity&) = delete;
-		Entity(Entity&&) = delete;
+
+		Entity(Entity&&);
 		Entity& operator=(Entity&&) = delete;
 
 		virtual void Draw(HWND);
