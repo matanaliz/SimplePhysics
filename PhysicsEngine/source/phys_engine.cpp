@@ -34,11 +34,12 @@ public:
 
 private:
 
+	//bool checkBodyOnBorder()
 	bool checkCollision(const BodyPtr&, const BodyPtr&) const;
 
 	void solveCollision(BodyPtr&, BodyPtr&) const;
 
-	Point clipPointToWorldMargins(const Point&) const;
+	Point clipPointToWorldBorder(const Point&) const;
 
 	Point m_botLeft;
 	Point m_topRight;
@@ -88,13 +89,11 @@ void EngineImpl::Step(double dt)
 
 	for (auto& body : m_bodies)
 	{
-		fVec2D velocity = body->GetVelocityVector();
 		Point position = body->GetPosition();
-
-		position = clipPointToWorldMargins(position);
-
-		const Mass mass = body->GetMass();
-		const float kBounceFactor = body->GetBounceFactor();
+		
+		// TODO clip position in here?
+		position = clipPointToWorldBorder(position);
+		body->SetPosition(position);
 
 		// Broad phase of collision detection:
 		// Look up for neighbours in quadrant
@@ -107,12 +106,15 @@ void EngineImpl::Step(double dt)
 		}
 
 		// TODO Clean this up
-		fVec2D ground_friction_force = { 0, 0 };
-
 		// Check restrictions. Body will bounce at world margins.
+		const Mass mass = body->GetMass();
+		const float kBounceFactor = body->GetBounceFactor();
+		fVec2D velocity = body->GetVelocityVector();
+
 		if (position.x >= m_topRight.x || position.x <= m_botLeft.x)
 			velocity.x *= -kBounceFactor;
-
+		
+		fVec2D ground_friction_force = { 0, 0 };
 		if (position.y >= m_topRight.y || position.y <= m_botLeft.y)
 		{
 			// Apply ground frictions simulation
@@ -125,18 +127,17 @@ void EngineImpl::Step(double dt)
 			velocity.y *= -kBounceFactor;
 		}
 
-		//Apply air drag force
-		fVec2D air_drag_force = m_airDrag * -velocity;
-		// Sum of force vectors, gravity force and air drag force
-		fVec2D force = m_gravity * mass.mass + air_drag_force + ground_friction_force;
-		fVec2D acceleration = force / mass.mass;
-
-		// Change position and velocity
-		position += Round(dt * (velocity + (0.5f * acceleration * dt)));
-		velocity += Round(dt * acceleration);
-		
-		body->SetPosition(position);
 		body->SetVelocityVector(velocity);
+
+		//Apply air drag force
+		const fVec2D air_drag_force = m_airDrag * -velocity;
+		// Sum of force vectors, gravity force and air drag force
+		const fVec2D force = m_gravity * mass.mass + air_drag_force + ground_friction_force;
+
+		body->ApplyForce(force);
+
+		// Run all the calculations for current body
+		body->Update(dt);
 	}
 }
 
@@ -184,23 +185,18 @@ void EngineImpl::solveCollision(BodyPtr& body, BodyPtr& collide) const
 	if (length_relative > 0.f)
 		return;
 
-	// TODO get inverted mass from body
 	const Mass mass = body->GetMass();
 	const Mass collide_mass = collide->GetMass();
-	double impulse_val = -(1.f + kBounceFactor) * length_relative;
-	impulse_val /= mass.inv_mass + collide_mass.inv_mass;
 
-	const fVec2D impulse = impulse_val * collision_normal;
+	const double length_impulse = -(1.f + kBounceFactor) * length_relative / (mass.inv_mass + collide_mass.inv_mass);
 
-	const fVec2D new_vel = velocity - impulse * mass.inv_mass;
-	const fVec2D new_collide_vel = collide_velocity + impulse * collide_mass.inv_mass;
+	const fVec2D impulse = length_impulse * collision_normal;
 
-	// Modify body and collider
-	body->SetVelocityVector(new_vel);
-	collide->SetVelocityVector(new_collide_vel);
+	body->ApplyImpulse(-(impulse));
+	collide->ApplyImpulse(impulse);
 }
 
-Point EngineImpl::clipPointToWorldMargins(const Point& pos) const
+Point EngineImpl::clipPointToWorldBorder(const Point& pos) const
 {
 	return { Clip(pos.x,
 				static_cast<Point::type>(m_botLeft.x),

@@ -29,6 +29,7 @@ namespace physic
 
 		virtual ShapeType GetShapeType() const = 0;
 		virtual int GetRadius() const = 0;
+		virtual fVec2D GetNormalVector() const = 0;
 	};
 
 	class PHYS_API IBody
@@ -42,11 +43,18 @@ namespace physic
 		virtual void SetVelocityVector(const fVec2D&) = 0;
 
 		virtual Mass GetMass() const = 0;
-		virtual void SetMass(Mass) = 0;
+		virtual void SetMass(const Mass&) = 0;
 
 		virtual float GetBounceFactor() const = 0;
 		virtual void SetBounceFactor(float) = 0;
 
+		virtual void ApplyForce(const fVec2D&) = 0;
+		virtual void ApplyImpulse(const fVec2D&) = 0;
+
+		// TODO change time type from float to dedicated
+		virtual void Update(float dt) = 0;
+
+		// TODO move this to entity
 		virtual ShapePtr GetShape() const = 0;
 
 		static BodyPtr CreateBody(IShape::ShapeType shape, const Point& position, const fVec2D& velocity, float mass);

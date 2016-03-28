@@ -60,7 +60,7 @@ namespace physic
 		// Unary arithmetic operators
 		Vec2D& operator+=(const Vec2D& v) { x += v.x; y += v.y; return *this; }
 		Vec2D& operator-=(const Vec2D& v) { x -= v.x; y -= v.y; return *this; }
-		Vec2D operator-() { return Vec2D<T>(-x, -y); }
+		Vec2D operator-() const { return Vec2D<T>(-x, -y); }
 
 		// Unary scalar multiplication and division operators
 		template <typename S> Vec2D& operator*=(S s) { x *= static_cast<T>(s); y *= static_cast<T>(s); return *this; }
@@ -122,7 +122,7 @@ namespace physic
 		template <typename U>
 		Point2D& operator-=(const Vec2D<U>& v) { x -= v.x; y -= v.y; return *this; }
 
-		Point2D operator-() { return Point2D<T>(-x, -y); }
+		Point2D operator-() const { return Point2D<T>(-x, -y); }
 
 		typedef T type;
 	};

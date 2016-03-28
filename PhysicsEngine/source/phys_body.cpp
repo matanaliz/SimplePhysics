@@ -1,6 +1,8 @@
 #include <phys_body.h>
 #include <phys_constants.h>
 
+#include <numeric>
+
 using namespace physic;
 
 class ShapeCircle : public IShape
@@ -17,6 +19,7 @@ public:
 
 	virtual ShapeType GetShapeType() const override;
 	virtual int GetRadius() const override;
+	virtual fVec2D GetNormalVector() const override;
 
 private:
 	IShape::ShapeType m_shape;
@@ -40,6 +43,11 @@ int ShapeCircle::GetRadius() const
 	return m_radius;
 }
 
+fVec2D ShapeCircle::GetNormalVector() const
+{
+	return { 0, 0 };
+}
+
 // TODO move BodyImpl to private include header
 class BodyImpl : public IBody
 {
@@ -57,13 +65,18 @@ public:
 	virtual void SetPosition(const Point&) override;
 
 	virtual Mass GetMass() const override;
-	virtual void SetMass(Mass) override;
+	virtual void SetMass(const Mass&) override;
 
 	virtual fVec2D GetVelocityVector() const override;
 	virtual void SetVelocityVector(const fVec2D&) override;
 
 	virtual float GetBounceFactor() const override;
 	virtual void SetBounceFactor(float) override;
+
+	virtual void ApplyForce(const fVec2D&) override;
+	virtual void ApplyImpulse(const fVec2D&) override;
+
+	virtual void Update(float dt) override;
 
 	virtual ShapePtr GetShape() const override;
 
@@ -72,6 +85,9 @@ private:
 	Point m_position;
 	fVec2D m_velocity;
 	Mass m_mass;
+
+	std::vector<fVec2D> m_forces;
+	std::vector<fVec2D> m_impulses;
 
 	std::shared_ptr<IShape> m_shape;
 
@@ -83,6 +99,8 @@ BodyImpl::BodyImpl()
 	: m_position(0.f, 0.f)
 	, m_velocity(0.f, 0.f)
 	, m_mass(1.f)
+	, m_forces()
+	, m_impulses()
 	, m_shape(std::make_shared<ShapeCircle>(ShapeCircle(IShape::ShapeType::Circle)))
 	, m_bounceFactor(kBounceFactor)
 {
@@ -93,6 +111,8 @@ BodyImpl::BodyImpl(IShape::ShapeType shape, Point pos, fVec2D vel, float mass)
 	: m_position(pos)
 	, m_velocity(vel)
 	, m_mass(mass)
+	, m_forces()
+	, m_impulses()
 	, m_shape(std::make_shared<ShapeCircle>(ShapeCircle(shape)))
 	, m_bounceFactor(kBounceFactor)
 {}
@@ -101,6 +121,8 @@ BodyImpl::BodyImpl(BodyImpl&& other)
 	: m_position(std::move(other.m_position))
 	, m_velocity(std::move(other.m_velocity))
 	, m_mass(std::move(other.m_mass))
+	, m_forces(std::move(other.m_forces))
+	, m_impulses(std::move(other.m_impulses))
 	, m_shape(std::move(other.m_shape))
 	, m_bounceFactor(std::move(other.m_bounceFactor))
 {
@@ -122,7 +144,7 @@ Mass BodyImpl::GetMass() const
 	return m_mass;
 }
 
-void BodyImpl::SetMass(Mass mass)
+void BodyImpl::SetMass(const Mass& mass)
 {
 	m_mass = mass;
 }
@@ -145,6 +167,33 @@ float BodyImpl::GetBounceFactor() const
 void BodyImpl::SetBounceFactor(float bounceFactor)
 {
 	m_bounceFactor = bounceFactor;
+}
+
+void BodyImpl::ApplyForce(const fVec2D& force)
+{
+	m_forces.push_back(force);
+}
+
+void BodyImpl::ApplyImpulse(const fVec2D& impulse)
+{
+	m_impulses.push_back(impulse);
+}
+
+void BodyImpl::Update(float dt)
+{
+	// Summarize all impulses applied to this body on this step
+	const fVec2D impulses = std::accumulate(std::begin(m_impulses), std::end(m_impulses), fVec2D(0, 0));
+	m_velocity += impulses * m_mass.inv_mass;
+
+	// Summarize all forces applied to this body on this step
+	const fVec2D forces = std::accumulate(std::begin(m_forces), std::end(m_forces), fVec2D(0, 0));
+	const fVec2D acceleration = forces * m_mass.inv_mass;
+
+	m_position += dt * m_velocity + 0.5f * acceleration * dt * dt;
+	m_velocity += dt * acceleration;
+
+	m_impulses.clear();
+	m_forces.clear();
 }
 
 ShapePtr BodyImpl::GetShape() const
