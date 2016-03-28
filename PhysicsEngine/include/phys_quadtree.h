@@ -9,6 +9,9 @@ namespace physic
 	template <class T>
 	class QuadTree
 	{
+		static_assert(std::is_base_of<BodyPtr, T>::value,
+			"Template parameter should be std::shared_ptr<IBody>");
+
 	public:
 		const size_t kMaxObjects = 8;
 		QuadTree(int level, Point bot_left, Point top_right)
@@ -18,8 +21,10 @@ namespace physic
 		{
 		}
 
-		std::vector<T>& locate(const T& body) const
+		std::vector<T> locate(const T& body) const
 		{
+			assert(body != nullptr);
+
 			Point pos = body->GetPosition();
 			std::vector<T> res {};
 
@@ -27,14 +32,14 @@ namespace physic
 				return res;
 
 			if (!m_objects.empty() && m_objects.size() > 1)
-				return m_objects;
+				return std::move(std::vector<T>(m_objects));
 
 			if (!m_nodes.empty())
 				for (const auto& node : m_nodes)
 				{
 					std::vector<T>& tmp = node.locate(body);
 					if (!tmp.empty())
-						return tmp;
+						return std::move(std::vector<T>(tmp));
 				}
 
 			return res;
@@ -42,6 +47,8 @@ namespace physic
 
 		bool insert(const T& body)
 		{
+			assert(body != nullptr);
+
 			Point pos = body->GetPosition();
 			if (!IsPointInRect(pos, m_botLeft, m_topRight))
 				return false;
@@ -87,7 +94,7 @@ namespace physic
 		Point m_botLeft;
 		Point m_topRight;
 
-		mutable std::vector<T> m_objects;
+		std::vector<T> m_objects;
 		std::vector<QuadTree> m_nodes;
 	};
 } // namespace physic

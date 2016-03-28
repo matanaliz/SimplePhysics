@@ -183,14 +183,13 @@ void BodyImpl::Update(float dt)
 {
 	// Summarize all impulses applied to this body on this step
 	const fVec2D impulses = std::accumulate(std::begin(m_impulses), std::end(m_impulses), fVec2D(0, 0));
-	m_velocity += impulses * m_mass.inv_mass;
 
 	// Summarize all forces applied to this body on this step
 	const fVec2D forces = std::accumulate(std::begin(m_forces), std::end(m_forces), fVec2D(0, 0));
 	const fVec2D acceleration = forces * m_mass.inv_mass;
 
 	m_position += dt * m_velocity + 0.5f * acceleration * dt * dt;
-	m_velocity += dt * acceleration;
+	m_velocity += dt * acceleration + impulses * m_mass.inv_mass;
 
 	m_impulses.clear();
 	m_forces.clear();

@@ -75,7 +75,7 @@ void EngineImpl::AddBody(BodyPtr& body)
 void EngineImpl::RemoveBody(const BodyPtr& body)
 {
 	assert(nullptr != body);
-	m_bodies.erase(std::remove(m_bodies.begin(), m_bodies.end(), body), m_bodies.end());
+	m_bodies.erase(std::remove(std::begin(m_bodies), std::end(m_bodies), body), std::end(m_bodies));
 }
 
 void EngineImpl::Step(double dt)
