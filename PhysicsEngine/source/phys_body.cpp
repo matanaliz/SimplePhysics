@@ -52,7 +52,7 @@ fVec2D ShapeCircle::GetNormalVector() const
 class BodyImpl : public IBody
 {
 public:
-	BodyImpl();
+	BodyImpl() = delete;
 	BodyImpl(IShape::ShapeType, Point, fVec2D, float);
 	~BodyImpl() = default;
 	BodyImpl(const BodyImpl&) = delete;
@@ -94,18 +94,6 @@ private:
 	// Leave "bounciness" to some "material"
 	float m_bounceFactor;
 };
-
-BodyImpl::BodyImpl()
-	: m_position(0.f, 0.f)
-	, m_velocity(0.f, 0.f)
-	, m_mass(1.f)
-	, m_forces()
-	, m_impulses()
-	, m_shape(std::make_shared<ShapeCircle>(ShapeCircle(IShape::ShapeType::Circle)))
-	, m_bounceFactor(kBounceFactor)
-{
-
-}
 
 BodyImpl::BodyImpl(IShape::ShapeType shape, Point pos, fVec2D vel, float mass)
 	: m_position(pos)
