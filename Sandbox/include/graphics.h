@@ -46,7 +46,7 @@ namespace draw
 		void SetWindowsHandle(HWND);
 		void AddBody(const physic::BodyPtr&);
 
-		void Crear();
+		void Clear();
 		void Draw();
 		void DrawCoordinates();
 		

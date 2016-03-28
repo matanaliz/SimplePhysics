@@ -3,15 +3,16 @@
 #include <phys_quadtree.h>
 
 #include <algorithm>
-#include <vector>
+#include <chrono>
 #include <iostream>
+#include <vector>
 
 using namespace physic;
 
 class EngineImpl : public IEngine
 {
 public:
-	virtual void SetWorldMargins(
+	virtual void SetWorldBorders(
 		Point bot_left = kWorldBotLeft,
 		Point top_right = kWorldTopRight) override;
 
@@ -51,7 +52,7 @@ private:
 	float m_groundFricion;
 };
 
-void EngineImpl::SetWorldMargins(Point bot_left, Point top_right)
+void EngineImpl::SetWorldBorders(Point bot_left, Point top_right)
 {
 	// Set world margins
 	m_botLeft = bot_left;

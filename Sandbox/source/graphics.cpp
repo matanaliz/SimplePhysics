@@ -39,7 +39,7 @@ namespace draw
 		DrawCoordinates();
 	}
 
-	void Render::Crear()
+	void Render::Clear()
 	{
 		assert(0 != m_hWnd);
 		HDC hdc;

@@ -20,7 +20,7 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_MOVING:
 	case WM_ENTERSIZEMOVE:
 	case WM_EXITSIZEMOVE:
-		draw::Render::Instance()->Crear();
+		draw::Render::Instance()->Clear();
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -197,19 +197,19 @@ int main(int argc, char* argv[])
 			};
 
 			// Set physical simulation constrains be same as graphics
-			engine->SetWorldMargins(bot, top);
+			engine->SetWorldBorders(bot, top);
 
 			ShowWindow(hWnd, SW_SHOWDEFAULT);
 			UpdateWindow(hWnd);
 
-			render->Crear();
-			
-			// TODO Rewrite whole loop for steady fps
-			long long sleep	{ 10 };
-			auto frameStart	= std::chrono::steady_clock::now();
-			auto outerLoopStart	= std::chrono::steady_clock::now();
+			render->Clear();
+
+			const double dt = 1.0f / 60.0;
+			auto current_time = std::chrono::steady_clock::now();
+			double accumulator = 0.0;
 
 			MSG msg { 0 };
+
 			while (TRUE)
 			{
 				if (GetMessage(&msg, NULL, 0, 0) >= 0)
@@ -217,34 +217,24 @@ int main(int argc, char* argv[])
 					TranslateMessage(&msg);
 					DispatchMessage(&msg);
 
-					// Constant framerate at ~16.7 ms, 60 fps
-					static const double dt = 1.0f / 60.0;
-					static const double dtMs = dt * 1000;
-					// Speed up simulation
-					static const double timeScale = 5;
+					auto new_time = std::chrono::steady_clock::now();
+					double frame_time = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(new_time - current_time).count();
+					current_time = new_time;
 
-					namespace sc = std::chrono;
+					if (frame_time > dt)
+						frame_time = dt;
 
-					auto frameStop = sc::steady_clock::now();
-					long long frameMs = sc::duration_cast<sc::milliseconds>(frameStop - frameStart).count();
-					long long outerLoopMs = sc::duration_cast<sc::milliseconds>(frameStop - outerLoopStart).count();
+					accumulator += frame_time;
 
-					frameStart = std::chrono::steady_clock::now();
-					
-					if (frameMs > dtMs)
-						sleep -= sleep / 4;
-					else
-						sleep += sleep / 4;
-					
-					// Call engine step with time delta parameter to calculate physics
-					engine->Step(dt * timeScale);
+					while (accumulator >= dt)
+					{
+						engine->Step(dt);
+						accumulator -= dt;
+					}
 
 					// Render all objects
 					draw::Render::Instance()->Draw();
 
-					std::this_thread::sleep_for(sc::milliseconds(sleep));
-
-					outerLoopStart = std::chrono::steady_clock::now();
 				}
 			}
 		}
