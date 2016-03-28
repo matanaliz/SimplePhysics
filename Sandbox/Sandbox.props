@@ -4,7 +4,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <OutDir>$(SolutionDir)Output\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)Output\Intermediate\$(Configuration)\</IntDir>
+    <IntDir>$(SolutionDir)Output\Intermediate\$(ProjectName)$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

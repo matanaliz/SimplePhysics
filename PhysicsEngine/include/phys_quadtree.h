@@ -18,21 +18,23 @@ namespace physic
 		{
 		}
 
-		std::vector<T> locate(const T& body) const
+		std::vector<T>& locate(const T& body) const
 		{
 			Point pos = body->GetPosition();
+			std::vector<T> res {};
+
 			if (!IsPointInRect(pos, m_botLeft, m_topRight))
-				return{};
+				return res;
 
 			if (!m_objects.empty() && m_objects.size() > 1)
 				return m_objects;
 
-			std::vector<T> res;
 			if (!m_nodes.empty())
 				for (const auto& node : m_nodes)
 				{
-					std::vector<T> tmp = node.locate(body);
-					res.insert(res.begin(), tmp.cbegin(), tmp.cend());
+					std::vector<T>& tmp = node.locate(body);
+					if (!tmp.empty())
+						return tmp;
 				}
 
 			return res;
@@ -85,7 +87,7 @@ namespace physic
 		Point m_botLeft;
 		Point m_topRight;
 
-		std::vector<T> m_objects;
+		mutable std::vector<T> m_objects;
 		std::vector<QuadTree> m_nodes;
 	};
 } // namespace physic

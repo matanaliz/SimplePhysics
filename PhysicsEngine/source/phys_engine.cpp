@@ -61,7 +61,6 @@ void EngineImpl::SetWorldBorders(Point bot_left, Point top_right)
 
 void EngineImpl::SetWorldConstants(float gravity, float air_drag, float ground_friction)
 {
-	// Set world margins
 	m_gravity = fVec2D(gravity, fAngle(-90.));
 	m_airDrag = air_drag;
 	m_groundFricion = ground_friction;
@@ -98,13 +97,14 @@ void EngineImpl::Step(double dt)
 
 		// Broad phase of collision detection:
 		// Look up for neighbours in quadrant
-		const auto& colliding = tree.locate(body);
-		for (auto collide : colliding)
-		{
-			// Narrow phase of collision detection
- 			if (checkCollision(body, collide))
-				solveCollision(body, collide);
-		}
+		auto& colliding = tree.locate(body);
+		if (!colliding.empty())
+			for (auto& collide : colliding)
+			{
+				// Narrow phase of collision detection
+ 				if (checkCollision(body, collide))
+					solveCollision(body, collide);
+			}
 
 		// TODO Clean this up
 		// Check restrictions. Body will bounce at world margins.
