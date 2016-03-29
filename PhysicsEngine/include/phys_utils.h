@@ -96,6 +96,7 @@ namespace physic
 	// Get length of vector
 	template<class T> T EuclideanNorm(const Vec2D<T>& v) { return std::sqrt(v.x * v.x + v.y * v.y); }
 	template<class T> T DotProduct(const Vec2D<T>& a, const Vec2D<T>& b) { return a.x * b.x + a.y * b.y; }
+	template<class T> T CrossProduct(const Vec2D<T>& a, const Vec2D<T>& b) { return a.x * b.y - a.y * b.x; }
 	template<class T> T GetAngle(const Vec2D<T>& a, const Vec2D<T>& b) { return std::acos(DotProduct(a, b) / (EuclideanNorm(a) * EuclideanNorm(b))) * 180.f / kPi; }
 	template<class T> Vec2D<T> Normalized(const Vec2D<T>& v) { T norm = EuclideanNorm(v); return norm != 0 ? Vec2D<T>(v) / norm : Vec2D<T>(static_cast<T>(0), static_cast<T>(0)); }
 	template<class T> Vec2D<T> Round(const Vec2D<T>& v) { return Vec2D<T>(std::round(v.x), std::round(v.y)); }
