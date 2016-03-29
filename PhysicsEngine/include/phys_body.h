@@ -21,15 +21,18 @@ namespace physic
 		enum class ShapeType
 		{
 			Circle,
-			Rectangle
+			Rectangle,
+			Polygon
 		};
 
 		IShape() = default;
 		virtual ~IShape() = default;
 
 		virtual ShapeType GetShapeType() const = 0;
+		virtual Point GetCenter() const = 0;
 		virtual int GetRadius() const = 0;
 		virtual fVec2D GetNormalVector() const = 0;
+		virtual bool Collide(IShape*) = 0;
 	};
 
 	class PHYS_API IBody

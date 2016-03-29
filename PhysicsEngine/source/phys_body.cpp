@@ -5,10 +5,96 @@
 
 using namespace physic;
 
+class ShapeBox : public IShape
+{
+public:
+	explicit ShapeBox() : m_shape(ShapeType::Rectangle), m_radius(0) {};
+	virtual ~ShapeBox() = default;
+
+	ShapeBox(const ShapeBox&) = delete;
+	ShapeBox& operator=(const ShapeBox&) = delete;
+
+	ShapeBox(ShapeBox&&);
+	ShapeBox& operator=(ShapeBox&&) = delete;
+
+	virtual ShapeType GetShapeType() const override;
+	virtual Point GetCenter() const override;
+	virtual int GetRadius() const override;
+	virtual fVec2D GetNormalVector() const override;
+
+	virtual bool Collide(IShape* other) override;
+	
+	void collideCircle(IShape* other);
+	void collideRectangle(IShape* other);
+	void collidePolygon(IShape* other);
+
+private:
+	IShape::ShapeType m_shape;
+	int m_radius;
+	fVec2D m_normal;
+	Point m_center;
+
+	int m_width;
+	int m_height;
+};
+
+IShape::ShapeType ShapeBox::GetShapeType() const
+{
+	return m_shape;
+}
+
+Point ShapeBox::GetCenter() const
+{
+	return m_center;
+}
+
+fVec2D ShapeBox::GetNormalVector() const
+{
+	return m_normal;
+}
+
+bool ShapeBox::Collide(IShape* other)
+{
+	assert(other != nullptr);
+
+	const IShape::ShapeType shape = other->GetShapeType();
+	switch (shape)
+	{
+	case IShape::ShapeType::Circle:
+		collideCircle(other);
+		break;
+	case IShape::ShapeType::Rectangle:
+		collideRectangle(other);
+		break;
+	case IShape::ShapeType::Polygon:
+		collidePolygon(other);
+		break;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+void ShapeBox::collideCircle(IShape* other)
+{
+
+}
+
+void ShapeBox::collideRectangle(IShape* other)
+{
+
+}
+
+void ShapeBox::collidePolygon(IShape* other)
+{
+
+}
+
 class ShapeCircle : public IShape
 {
 public:
-	explicit ShapeCircle(ShapeType) {};
+	explicit ShapeCircle() : m_shape(ShapeType::Circle), m_radius(0) {};
 	virtual ~ShapeCircle() = default;
 
 	ShapeCircle(const ShapeCircle&) = delete;
@@ -18,12 +104,17 @@ public:
 	ShapeCircle& operator=(ShapeCircle&&) = delete;
 
 	virtual ShapeType GetShapeType() const override;
+	virtual Point GetCenter() const override;
 	virtual int GetRadius() const override;
 	virtual fVec2D GetNormalVector() const override;
+
+	virtual bool Collide(IShape* other) override;
 
 private:
 	IShape::ShapeType m_shape;
 	int m_radius;
+	fVec2D m_normal;
+	Point m_center;
 };
 
 ShapeCircle::ShapeCircle(ShapeCircle&& other)
@@ -38,6 +129,11 @@ IShape::ShapeType ShapeCircle::GetShapeType() const
 	return m_shape;
 }
 
+Point ShapeCircle::GetCenter() const
+{
+	return m_center;
+}
+
 int ShapeCircle::GetRadius() const
 {
 	return m_radius;
@@ -46,6 +142,11 @@ int ShapeCircle::GetRadius() const
 fVec2D ShapeCircle::GetNormalVector() const
 {
 	return { 0, 0 };
+}
+
+bool ShapeCircle::Collide(IShape* other)
+{
+	return false;
 }
 
 // TODO move BodyImpl to private include header
@@ -101,7 +202,7 @@ BodyImpl::BodyImpl(IShape::ShapeType shape, Point pos, fVec2D vel, float mass)
 	, m_mass(mass)
 	, m_forces()
 	, m_impulses()
-	, m_shape(std::make_shared<ShapeCircle>(ShapeCircle(shape)))
+	, m_shape(std::make_shared<ShapeCircle>(ShapeCircle()))
 	, m_bounceFactor(kBounceFactor)
 {}
 

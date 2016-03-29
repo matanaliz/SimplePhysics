@@ -43,11 +43,17 @@ namespace physic
 
 		Vec2D(T vx = 0, T vy = 0) : x(vx), y(vy) {}
 
-		template <typename A>
-		Vec2D(T length, Angle<A> angle)
+		template <typename U>
+		Vec2D(T length, Angle<U> angle)
 			: x(static_cast<T>(length * std::cos(angle.inRad())))
 			, y(static_cast<T>(length * std::sin(angle.inRad())))
 		{}
+
+		//template <typename U>
+		//Vec2D(U length, U angle)
+		//	: x(static_cast<T>(length * std::cos(angle.inRad())))
+		//	, y(static_cast<T>(length * std::sin(angle.inRad())))
+		//{}
 
 		~Vec2D() = default;
 

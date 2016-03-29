@@ -1,6 +1,7 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 #include <Windows.h>
+#include <Windowsx.h>
 #include <phys_engine.h>
 #include <vector>
 

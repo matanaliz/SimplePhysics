@@ -10,8 +10,13 @@
 #include <thread>
 #include <string>
 
+// OUCH, ugly
+static physic::Point mouse_down{ 0., 0. };
+
 LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	
+
 	switch (msg)
 	{
 	case WM_CREATE:
@@ -30,9 +35,7 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_CHAR:
 		if (VK_SPACE == wParam)
 		{
-			physic::IEngine* engine = physic::IEngine::Instance();
-
-			const physic::Point pos = { static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
+			const physic::Point pos { static_cast<physic::Point::type>(draw::kAxisCrossPoint.x + draw::kDefaultEntityRadius + 1),
 				static_cast<physic::Point::type>(draw::kAxisCrossPoint.y + draw::kDefaultEntityRadius + 1) };
 			const physic::fVec2D vel = physic::fVec2D(150, physic::fAngle(45));
 
@@ -40,12 +43,41 @@ LRESULT CALLBACK WinProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			physic::BodyPtr body = physic::IBody::CreateBody(physic::IShape::ShapeType::Circle, pos, vel, 20);
 
 			// Add body into engine for simulation
+			physic::IEngine* engine = physic::IEngine::Instance();
 			engine->AddBody(body);
 
 			// Add body to drawing queue
 			draw::Render* render = draw::Render::Instance();
 			render->AddBody(body);
 		}
+		break;
+	case WM_LBUTTONDOWN:
+		mouse_down.x = GET_X_LPARAM(lParam);
+		mouse_down.y = GET_Y_LPARAM(lParam);
+		break;
+	case WM_LBUTTONUP:
+	{
+		physic::Point curr_pos{
+			static_cast<physic::Point::type>(GET_X_LPARAM(lParam)),
+			static_cast<physic::Point::type>(GET_Y_LPARAM(lParam))
+		};
+
+		physic::fVec2D vec = mouse_down - curr_pos;
+
+		// Physical body. Should be wrapped for correct drawing.
+		physic::BodyPtr body = physic::IBody::CreateBody(physic::IShape::ShapeType::Circle, mouse_down, vec, 20);
+
+		// Add body into engine for simulation
+		physic::IEngine* engine = physic::IEngine::Instance();
+		engine->AddBody(body);
+
+		// Add body to drawing queue
+		draw::Render* render = draw::Render::Instance();
+		render->AddBody(body);
+
+		break;
+	}
+	case WM_MOUSEMOVE:
 		break;
 	default:
 		return DefWindowProc(hWnd, msg, wParam, lParam);
@@ -228,7 +260,7 @@ int main(int argc, char* argv[])
 
 					while (accumulator >= dt)
 					{
-						engine->Step(dt);
+						engine->Step(dt / 2);
 						accumulator -= dt;
 					}
 
