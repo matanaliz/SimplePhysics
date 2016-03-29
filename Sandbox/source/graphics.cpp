@@ -127,11 +127,12 @@ namespace draw
 		HPEN origPen = (HPEN)SelectObject(hdc, whitePen);
 
 		int cleanupRadius = m_radius + kCleanupMargin;
-		Rectangle(hdc,
-			(int)m_prevPosition.x - cleanupRadius,
-			(int)m_prevPosition.y - cleanupRadius,
-			(int)m_prevPosition.x + cleanupRadius,
-			(int)m_prevPosition.y + cleanupRadius);
+
+		Ellipse(hdc,
+			(int)m_prevPosition.x - m_radius,
+			(int)m_prevPosition.y - m_radius,
+			(int)m_prevPosition.x + m_radius,
+			(int)m_prevPosition.y + m_radius);
 
 		SelectObject(hdc, blackPen);
 		
