@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sandbox", "Sandbox\Sandbox.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PhysicsEngine", "PhysicsEngine\PhysicsEngine.vcxproj", "{942E9DDA-282A-473F-802D-8306C8B01856}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_PhysicEngine", "tests\test_PhysicEngine\test_PhysicEngine.vcxproj", "{66B10694-66A9-47CB-B5B2-9FCC9B018075}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -21,6 +23,10 @@ Global
 		{942E9DDA-282A-473F-802D-8306C8B01856}.Debug|Win32.Build.0 = Debug|Win32
 		{942E9DDA-282A-473F-802D-8306C8B01856}.Release|Win32.ActiveCfg = Release|Win32
 		{942E9DDA-282A-473F-802D-8306C8B01856}.Release|Win32.Build.0 = Release|Win32
+		{66B10694-66A9-47CB-B5B2-9FCC9B018075}.Debug|Win32.ActiveCfg = Debug|Win32
+		{66B10694-66A9-47CB-B5B2-9FCC9B018075}.Debug|Win32.Build.0 = Debug|Win32
+		{66B10694-66A9-47CB-B5B2-9FCC9B018075}.Release|Win32.ActiveCfg = Release|Win32
+		{66B10694-66A9-47CB-B5B2-9FCC9B018075}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
